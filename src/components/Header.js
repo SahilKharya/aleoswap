@@ -1,6 +1,6 @@
 import React from "react";
-import Logo from "../logo.jpeg";
-import Eth from "../leo.jpeg";
+import Logo from "../logo.svg";
+import Eth from "../logo.svg";
 import { Link } from "react-router-dom";
 
 function Header(props) {
