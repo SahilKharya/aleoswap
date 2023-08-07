@@ -26,15 +26,15 @@ function Home(props) {
           src={Globe}
           alt="globe_logo"
           initial={{ scale: 1, rotate: 0 }}
-          animate={{ scale: 2.2, rotate: 180 }}
+          animate={{ scale: 2.2, rotate: 182 }}
           transition={{ duration: 2 }}
         />
         <motion.img
           className="m-space"
           src={Text}
           alt="leo-swap"
-          initial={{ opacity: 0.5, y: 10, scale: 0.2 }}
-          animate={{ opacity: 1, y: -130, scale: 0.7 }}
+          initial={{ opacity: 0.5, y: 10,x: 10, scale: 0.2 }}
+          animate={{ opacity: 1, y: -148, x:10, scale: 0.71 }}
           transition={{ duration: 2 }}
         >
         </motion.img>
