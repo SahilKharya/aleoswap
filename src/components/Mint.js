@@ -23,12 +23,12 @@ function Mint() {
         functionName: 'mint_public',
         // Aleo program inputs need their types specified, our program takes in 32 bit integers
         // so the inputs should look like "2i32 3i32"
-        inputs: address + "address " + tokenId + "u64 " + supply + "u64",
+        inputs: address + " " + tokenId + "u64 " + supply + "u64",
     });
     const handleMint = (event) => {
         event.preventDefault();
         console.log("Work")
-        console.log(address + "address " + tokenId + "u64 " + supply + "u64")
+        console.log(address + " " + tokenId + "u64 " + supply + "u64")
         execute();
     }
     // r0 -> address
