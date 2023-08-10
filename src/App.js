@@ -1,8 +1,10 @@
 import "./App.css";
 import Header from "./components/Header";
 import Swap from "./components/Swap";
+import Mint from "./components/Mint";
+import Create from "./components/Create";
 import Home from "./components/Home";
-import { Route, Routes, useLocation } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import {
   useAccount,
   useConnect,
@@ -11,11 +13,25 @@ import {
 } from '@puzzlehq/sdk';
 import { PuzzleWeb3Modal } from '@puzzlehq/sdk';
 
-
 function App() {
   const { connect } = useConnect();
-  const { account, accounts, isConnected, session, error, loading } = useAccount();
-  console.log(isConnected)
+  const { account, accounts, isConnected } = useAccount();
+  const {
+    execute,
+    loading,
+    transactionId,
+    outputPrivate,
+    outputRecords,
+    outputPublic,
+    outputConstant,
+    error,
+  } = useExecuteProgram({
+    programId: "leoswapxyz.aleo",
+    functionName: 'create_token',
+    // Aleo program inputs need their types specified, our program takes in 32 bit integers
+    // so the inputs should look like "2i32 3i32"
+    inputs: "11u64 " + "8u8 " + "20u64",
+  });
 
   return (
     <>
@@ -28,8 +44,24 @@ function App() {
             <Routes>
               <Route path='/' element={<Home isConnected={isConnected} connect={connect} />} />
               <Route path='/swap' element={<Swap />} />
+              <Route path='/mint' element={<Mint />} />
+              <Route path='/create' element={<Create />} />
             </Routes>
           </div>
+          {/* <div>
+            <button
+              onClick={() => execute()}
+              disabled={loading}
+            >
+              execute program
+            </button>
+            {error && <p>error executing program: {error}</p>}
+            {loading && <p>executing program...</p>}
+            {transactionId && !loading && !error && <p>Transaction Id: {transactionId}</p>}
+            {outputPrivate && (
+              <p>{"Result:" + outputPrivate.replace("i32", "")}</p>
+            )}
+          </div> */}
         </div>
       </PuzzleWalletProvider>
       <PuzzleWeb3Modal

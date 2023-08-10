@@ -2,22 +2,11 @@ import React from 'react'
 import { motion } from 'framer-motion';
 import Globe from '../asset/globe.svg';
 import Text from '../asset/text.svg';
-import { Route, Routes, useLocation } from "react-router-dom";
-import {
-  useAccount,
-  useConnect,
-  useExecuteProgram,
-  PuzzleWalletProvider,
-} from '@puzzlehq/sdk';
-import { PuzzleWeb3Modal } from '@puzzlehq/sdk';
-
 
 function Home(props) {
 
-  console.log(props)
   const { isConnected, connect } = props;
 
-  console.log(isConnected)
   return (
     <>
       <div className="container">

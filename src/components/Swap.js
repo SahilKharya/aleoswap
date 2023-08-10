@@ -1,16 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Popover, Radio, Modal, message } from "antd";
 import {
-  ArrowDownOutlined,
   DownOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
 import tokenList from "../tokenList.json";
 import axios from "axios";
 import Switch from '../asset/switch.svg';
-
-// import { useSendTransaction, useWaitForTransaction } from "wagmi";
-
 
 function Swap(props) {
   const { address, isConnected } = props;
@@ -87,9 +83,7 @@ function Swap(props) {
 
   async function fetchPrices(one, two) {
 
-    const res = await axios.get(`http://localhost:3001/tokenPrice`, {
-      params: { addressOne: one, addressTwo: two }
-    })
+    const res = { 'data': '22' }
 
 
     setPrices(res.data)
@@ -120,12 +114,16 @@ function Swap(props) {
 
   }
 
+  // useEffect(() => {
+  //   fetchPrices(tokenList[0].address, tokenList[1].address)
+  //   if (error) {
+  //     <p>error loading your balance: {error}</p>
+  //   }
 
-  useEffect(() => {
-
-    fetchPrices(tokenList[0].address, tokenList[1].address)
-
-  }, [])
+  //   if (loading) {
+  //     <p>loading your balance...</p>
+  //   }
+  // }, [balance])
 
   // useEffect(()=>{
 
@@ -231,19 +229,31 @@ function Swap(props) {
           <div className="switchButton" onClick={switchTokens}>
             <img src={Switch} alt="logo" className="switchArrow" />
           </div>
-          <div className="assetOne" onClick={() => openModal(1)}>
+          <div className="asset assetOne" onClick={() => openModal(1)}>
             <img src={tokenOne.img} alt="assetOneLogo" className="assetLogo" />
             {tokenOne.ticker}
             <DownOutlined />
           </div>
-          <div className="assetTwo" onClick={() => openModal(2)}>
+          <div className="asset assetTwo" onClick={() => openModal(2)}>
             <img src={tokenTwo.img} alt="assetOneLogo" className="assetLogo" />
             {tokenTwo.ticker}
             <DownOutlined />
           </div>
         </div>
         <div className="swapButton" disabled={!tokenOneAmount || !isConnected} onClick={fetchDexSwap}>Swap</div>
+        {/* <div>
+          <button
+            onClick={() => execute()}
+            disabled={loading}
+          >
+            execute program
+          </button>
+          {error && <p>error executing program: {error}</p>}
+          {loading && <p>executing program...</p>}
+          {transactionId && !loading && !error && <p>Transaction Id: {transactionId}</p>}
+        </div> */}
       </div>
+
     </>
   );
 }
