@@ -16,6 +16,16 @@ header {
   height: 125px;
 }
 
+.largeLogo {
+  width: 600px;
+  height: 500px;
+}
+
+.switchArrow {
+  width: 28px;
+  height: 31px;
+}
+
 .eth {
   width: 20px;
   height: 20px;
@@ -53,13 +63,6 @@ header {
 }
 
 .connectButton {
-  background-color: #0B0B38;
-  padding: 10px;
-  padding-right: 20px;
-  padding-left: 20px;
-  border-radius: 100px;
-  color: #5981F3;
-  font-weight: bold;
   transition: 0.3s;
   width: Hug (241px);
   height: Fixed (54px);
@@ -68,7 +71,6 @@ header {
   padding: 15px 30px 15px 30px;
   border-radius: 2px;
   gap: 20px;
-  background: #2B2B4B;
   font-family: Inter;
   font-size: 20px;
   font-weight: 400;
@@ -76,7 +78,13 @@ header {
   letter-spacing: 0em;
   text-align: center;
   color: #C3ED1C;
+  background: linear-gradient(0deg, #0B0B38, #0B0B38),
+    linear-gradient(0deg, #D0CECE, #D0CECE);
+  border: 0.5px solid #D0CECE;
+}
 
+.btn-later {
+  color: #D0CECE;
 }
 
 .connectButton:hover {
@@ -85,10 +93,17 @@ header {
 }
 
 .mainWindow {
-  height: calc(90vh - 160px);
+  height: calc(100vh - 170px);
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.logoText {
+  font-size: 25px;
+  font-weight: 800;
+  line-height: 30px;
+  letter-spacing: 0.2em;
 }
 
 .link {
@@ -186,6 +201,7 @@ header {
 .inputs {
   position: relative;
 }
+
 .asset {
   position: absolute;
   min-width: 50px;
@@ -201,12 +217,15 @@ header {
   padding: 12px;
   border: 0.5px solid #D0CECE;
 }
+
 .assetOne {
   top: 19px;
 }
+
 .assetTwo {
   top: 134px;
 }
+
 .assetThree {
   top: 249px;
 }
@@ -242,7 +261,11 @@ header {
 }
 
 .m-space {
-  margin: 25px 0;
+  margin: 24px;
+}
+
+.in-flex {
+  display: inline-flex;
 }
 
 .swapButton {

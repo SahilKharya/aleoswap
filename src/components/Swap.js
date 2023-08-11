@@ -6,7 +6,7 @@ import {
 } from "@ant-design/icons";
 import tokenList from "../tokenList.json";
 import axios from "axios";
-import Switch from '../asset/switch.svg';
+import Switch from '../asset/Swap_Button.png';
 
 function Swap(props) {
   const { address, isConnected } = props;
