@@ -65,13 +65,13 @@ function Mint() {
                     value={supply}
                     onChange={e => setSupply(e.target.value)}
                 />
-                <div className="asset assetOne">
+                <div className="asset_2 asset_One">
                     Address
                 </div>
-                <div className="asset assetTwo">
+                <div className="asset_2 asset_Two">
                     Token ID
                 </div>
-                <div className="asset assetThree">
+                <div className="asset_2 asset_Three">
                     Supply
                 </div>
             </div>

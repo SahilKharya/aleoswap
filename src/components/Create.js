@@ -64,13 +64,13 @@ function Create() {
                     value={maxSupply}
                     onChange={e => setMaxSupply(e.target.value)}
                 />
-                <div className="asset assetOne">
+                <div className="asset_2 asset_One">
                     Token ID
                 </div>
-                <div className="asset assetTwo">
+                <div className="asset_2 asset_Two">
                     Decimals
                 </div>
-                <div className="asset assetThree">
+                <div className="asset_2 asset_Three">
                     Max Supply
                 </div>
             </div>

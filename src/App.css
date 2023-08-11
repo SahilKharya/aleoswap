@@ -218,6 +218,12 @@ header {
   border: 0.5px solid #D0CECE;
 }
 
+.asset_2 {
+  position: absolute;
+  font-weight: 600;
+  font-size: 16px;
+  left: 19px;
+}
 .balanceText {
   position: absolute;
   height: 15px;
@@ -242,6 +248,17 @@ header {
 }
 
 .assetThree {
+  top: 249px;
+}
+.asset_One {
+  top: 19px;
+}
+
+.asset_Two {
+  top: 134px;
+}
+
+.asset_Three {
   top: 249px;
 }
 

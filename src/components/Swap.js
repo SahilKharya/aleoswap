@@ -74,8 +74,8 @@ function Swap(props) {
     functionName: 'swap_exact_in',
     // Aleo program inputs need their types specified, our program takes in 32 bit integers
     // so the inputs should look like "2i32 3i32"
-    // inputs: {owner: aleo1wxulzwkmyp45j73kz22lzys8xfc7g26fa90tydc0ctm34s4yqc8svsawj7.private, amount: 22u128.private,  token_id: 222u64.private,  _nonce: 6907203199694275432003410649292689215298215923460989556166877178358311583427group.public}  2u64  0u128
-    inputs: tokenList[0].record + " " + tokenList[0].token_id + "u64 " + slippage + "u128"
+    // inputs: '{owner: aleo1wxulzwkmyp45j73kz22lzys8xfc7g26fa90tydc0ctm34s4yqc8svsawj7.private, amount: 22u128.private,  token_id: 222u64.private,  _nonce: 6907203199694275432003410649292689215298215923460989556166877178358311583427group.public}  234u64  0u128'
+    inputs: tokenList[0].record + " " + tokenList[1].token_id.replace('u64.private', '') + "u64 " + slippage + "u128"
   });
   //   function swap_exact_in:
   //     input r0 as Token.record;
@@ -102,6 +102,7 @@ function Swap(props) {
         // Any asynchronous operation on records here.
         // For example, fetching additional data or processing records.
         // For demonstration, I'm slicing the records array.
+        console.log(records)
         const newRecords = records.slice(0, 5);  // change this to your actual async operation
         setProcessedRecords(newRecords);
       }
@@ -115,10 +116,11 @@ function Swap(props) {
 
   async function fetchTokensList() {
     console.log(records)
-    const groupedByTokenId = records.reduce((acc, record) => {
+    const groupedByTokenId = records.reduce((acc, record, index) => {
       // Parse the plaintext to get the token_id
       const parsedPlaintext = JSON.parse(correctJSONString(record.plaintext))
       const tokenId = parsedPlaintext.token_id;
+      tokenList[index].record = record.plaintext.replace(/"([^"]+)":/g, '$1:').replace(/\n/g, '').replace(/,/g, ', ').replace(/   /g, ' ');
 
       // Initialize the array for the token_id if it doesn't exist
       if (!acc[tokenId]) {
@@ -132,8 +134,6 @@ function Swap(props) {
 
     Object.values(groupedByTokenId).forEach((record, index) => {
       tokenList[index].amount = 0
-      console.log(record, index)
-      tokenList[index].record = JSON.stringify(record[0])
 
       record.forEach((r, i) => {
         let amountVal = parseInt(r.amount.replace(/u128\.private/g, ""));
@@ -347,14 +347,11 @@ function Swap(props) {
           <p className="balanceText balanceTextTwo">Balance: {balanceTwo}</p>
 
         </div>
-        <div className="swapButton" disabled={!isConnected} onClick={fetchDexSwap}>Swap</div>
+        <div className="swapButton" disabled={!isConnected} onClick={fetchDexSwap}>Swap
+
+        </div>
+        
         <div>
-          <button
-            onClick={() => execute()}
-            disabled={loading}
-          >
-            execute program
-          </button>
           {error && <p>error executing program: {error}</p>}
           {loading && <p>executing program...</p>}
           {transactionId && !loading && !error && <p>Transaction Id: {transactionId}</p>}
