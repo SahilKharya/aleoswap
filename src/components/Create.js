@@ -19,18 +19,17 @@ function Create() {
         outputConstant,
         error,
     } = useExecuteProgram({
-        programId: "leoswapxyz.aleo",
+        programId: "leoswapxyz_v2.aleo",
         functionName: 'create_token',
         // Aleo program inputs need their types specified, our program takes in 32 bit integers
         // so the inputs should look like "2i32 3i32"
-        inputs: tokenId + "u64 " + decimals + "u8 " + maxSupply + "u64",
+        inputs: tokenId + "u64 " + decimals + "u8 " + maxSupply + "u128",
     });
-
     const handleCreate = (event) => {
         event.preventDefault();
         // Read the form data
         console.log("Work")
-        console.log(tokenId + "u64 " + decimals + "u8 " + maxSupply + "u64")
+        console.log(tokenId + "u64 " + decimals + "u8 " + maxSupply + "u128")
         execute();
     }
     // r0 -> token_id
@@ -38,8 +37,8 @@ function Create() {
     // r2 -> max_supply
     // input r0 as u64.public;
     // input r1 as u8.public;
-    // input r2 as u64.public;
-    // cast r0 0u64 r2 r1 into r3 as TokenInfo;
+    // input r2 as u128.public;
+    // cast r0 r2 r1 into r3 as TokenInfo;
     
     function changeTokenId(e) {
         setTokenId(e.target.value);

@@ -218,12 +218,27 @@ header {
   border: 0.5px solid #D0CECE;
 }
 
+.balanceText {
+  position: absolute;
+  height: 15px;
+  gap: 4px;
+  left: 19px
+}
+
 .assetOne {
   top: 19px;
 }
 
+.balanceTextOne {
+  top: 62px;
+}
+
 .assetTwo {
   top: 134px;
+}
+
+.balanceTextTwo {
+  top: 177px;
 }
 
 .assetThree {

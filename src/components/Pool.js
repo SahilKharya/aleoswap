@@ -4,10 +4,10 @@ import {
     useExecuteProgram,
 } from '@puzzlehq/sdk';
 
-function Mint() {
+function Pool() {
     const [address, setAddress] = useState(null);
-    const [tokenId, setTokenId] = useState(null);
-    const [supply, setSupply] = useState(null);
+    const [token_one, setTokenId] = useState(null);
+    const [token_two, setSupply] = useState(null);
     const { isConnected } = useAccount();
     const {
         execute,
@@ -20,26 +20,21 @@ function Mint() {
         error,
     } = useExecuteProgram({
         programId: "leoswapxyz_v2.aleo",
-        functionName: 'mint_private',
+        functionName: 'create_pool',
         // Aleo program inputs need their types specified, our program takes in 32 bit integers
         // so the inputs should look like "2i32 3i32"
-        inputs: address + " " + tokenId + "u64 " + supply + "u128",
+        inputs:token_one + "u64 " + token_two + "u64",
     });
     const handleMint = (event) => {
         event.preventDefault();
         console.log("Work")
-        console.log(address + " " + tokenId + "u64 " + supply + "u128")
+        console.log(token_one + "u64 " + token_two + "u64")
         execute();
     }
-    // r0 -> address
-    // r1 -> token_id
-    // r2 -> supply
-    // input r0 as address.private;
-    // input r1 as u64.private;
-    // input r2 as u128.private;
-    // cast r0 r2 r1 into r3 as Token.record;
-    // output r3 as Token.record;
-    // finalize r1;
+    // r0 -> token
+    // r1 -> token
+    // input r0 as u64.public;
+    // input r1 as u64.public;
 
     function changeAddress(e) {
         setAddress(e.target.value);
@@ -57,12 +52,12 @@ function Mint() {
                 />
                 <input className="inputBox"
                     placeholder="0"
-                    value={tokenId}
+                    value={token_one}
                     onChange={e => setTokenId(e.target.value)}
                 />
                 <input className="inputBox"
                     placeholder="0"
-                    value={supply}
+                    value={token_two}
                     onChange={e => setSupply(e.target.value)}
                 />
                 <div className="asset assetOne">
@@ -88,4 +83,4 @@ function Mint() {
     )
 }
 
-export default Mint
+export default Pool

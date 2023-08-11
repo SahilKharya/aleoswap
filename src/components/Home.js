@@ -15,10 +15,6 @@ function Home(props) {
         {isConnected && (
           <>
             <img src={Logo} alt="logo" className="largeLogo" />
-            <br></br>
-            <Link to="/swap" className="link">
-              <div className="connectButton m-space">Swap</div>
-            </Link>
           </>
 
 

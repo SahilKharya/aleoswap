@@ -12,6 +12,7 @@ import {
   PuzzleWalletProvider,
 } from '@puzzlehq/sdk';
 import { PuzzleWeb3Modal } from '@puzzlehq/sdk';
+import Activity from "./components/Activity";
 
 function App() {
   const { connect } = useConnect();
@@ -26,7 +27,7 @@ function App() {
     outputConstant,
     error,
   } = useExecuteProgram({
-    programId: "leoswapxyz.aleo",
+    programId: "leoswapxyz_v2.aleo",
     functionName: 'create_token',
     // Aleo program inputs need their types specified, our program takes in 32 bit integers
     // so the inputs should look like "2i32 3i32"
@@ -46,6 +47,7 @@ function App() {
               <Route path='/swap' element={<Swap />} />
               <Route path='/mint' element={<Mint />} />
               <Route path='/create' element={<Create />} />
+              <Route path='/activity' element={<Activity />} />
             </Routes>
           </div>
           {/* <div>
