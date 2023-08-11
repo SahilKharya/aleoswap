@@ -44,7 +44,7 @@ function App() {
 
             <Routes>
               <Route path='/' element={<Home isConnected={isConnected} connect={connect} />} />
-              <Route path='/swap' element={<Swap />} />
+              <Route path='/swap' element={<Swap isConnected={isConnected} address={account}/>} />
               <Route path='/mint' element={<Mint />} />
               <Route path='/create' element={<Create />} />
               <Route path='/activity' element={<Activity />} />

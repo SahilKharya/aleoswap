@@ -7,14 +7,14 @@ import {
 import tokenList from "../tokenList.json";
 import axios from "axios";
 import Switch from '../asset/Swap_Button.png';
-import { useRecords } from '@puzzlehq/sdk';
+import { useRecords, useExecuteProgram } from '@puzzlehq/sdk';
 
 function Swap(props) {
   const { address, isConnected } = props;
   const [messageApi, contextHolder] = message.useMessage();
-  const [slippage, setSlippage] = useState(2.5);
-  const [tokenOneAmount, setTokenOneAmount] = useState(null);
-  const [tokenTwoAmount, setTokenTwoAmount] = useState(null);
+  const [slippage, setSlippage] = useState(2);
+  const [tokenOneRecord, setTokenOneRecord] = useState(null);
+  const [tokenTwoID, setTokenTwoID] = useState(null);
   const [tokenOne, setTokenOne] = useState(tokenList[0]);
   const [tokenTwo, setTokenTwo] = useState(tokenList[1]);
   const [isOpen, setIsOpen] = useState(false);
@@ -22,6 +22,7 @@ function Swap(props) {
   const [prices, setPrices] = useState(null);
   const [balanceOne, setbalanceOne] = useState(null);
   const [balanceTwo, setbalanceTwo] = useState(null);
+
   const [txDetails, setTxDetails] = useState({
     to: null,
     data: null,
@@ -52,12 +53,46 @@ function Swap(props) {
   }
 
 
-  const { records, error, loading } = useRecords(
+  const { records } = useRecords(
     {
       program_id: 'leoswapxyz_v2.aleo', // any deployed aleo program id
       type: 'unspent', // one of 'all' | 'spent' | 'unspent'
     } // optional params
   );
+
+  const {
+    execute,
+    loading,
+    transactionId,
+    outputPrivate,
+    outputRecords,
+    outputPublic,
+    outputConstant,
+    error,
+  } = useExecuteProgram({
+    programId: "leoswapxyz_v2.aleo",
+    functionName: 'swap_exact_in',
+    // Aleo program inputs need their types specified, our program takes in 32 bit integers
+    // so the inputs should look like "2i32 3i32"
+    // inputs: {owner: aleo1wxulzwkmyp45j73kz22lzys8xfc7g26fa90tydc0ctm34s4yqc8svsawj7.private, amount: 22u128.private,  token_id: 222u64.private,  _nonce: 6907203199694275432003410649292689215298215923460989556166877178358311583427group.public}  2u64  0u128
+    inputs: tokenList[0].record + " " + tokenList[0].token_id + "u64 " + slippage + "u128"
+  });
+  //   function swap_exact_in:
+  //     input r0 as Token.record;
+  //     input r1 as u64.private;
+  //     input r2 as u128.private;
+  //     cast self.caller r0.amount r1 into r3 as Token.record;
+  //     output r3 as Token.record;
+  //     finalize r0.token_id r1 r2;
+
+  // finalize swap_exact_in:
+  //     input r0 as u64;
+  //     input r1 as u64;
+  //     input r2 as u128;
+  //     contains registered_tokens[r1] into r3;
+  //     assert_eq r3 true;
+
+
 
   const [processedRecords, setProcessedRecords] = useState([]);
 
@@ -79,7 +114,7 @@ function Swap(props) {
   }, [records]);
 
   async function fetchTokensList() {
-
+    console.log(records)
     const groupedByTokenId = records.reduce((acc, record) => {
       // Parse the plaintext to get the token_id
       const parsedPlaintext = JSON.parse(correctJSONString(record.plaintext))
@@ -97,6 +132,9 @@ function Swap(props) {
 
     Object.values(groupedByTokenId).forEach((record, index) => {
       tokenList[index].amount = 0
+      console.log(record, index)
+      tokenList[index].record = JSON.stringify(record[0])
+
       record.forEach((r, i) => {
         let amountVal = parseInt(r.amount.replace(/u128\.private/g, ""));
         tokenList[index].amount += amountVal
@@ -132,21 +170,6 @@ function Swap(props) {
     fetchBalance(tokenList[0].token_id, tokenList[1].token_id)
 
   }, [])
-  //   function swap_exact_in:
-  //     input r0 as Token.record;
-  //     input r1 as u64.private;
-  //     input r2 as u128.private;
-  //     cast self.caller r0.amount r1 into r3 as Token.record;
-  //     output r3 as Token.record;
-  //     finalize r0.token_id r1 r2;
-
-  // finalize swap_exact_in:
-  //     input r0 as u64;
-  //     input r1 as u64;
-  //     input r2 as u128;
-  //     contains registered_tokens[r1] into r3;
-  //     assert_eq r3 true;
-
 
 
   function handleSlippageChange(e) {
@@ -154,23 +177,24 @@ function Swap(props) {
   }
 
   function changeAmount(e) {
-    setTokenOneAmount(e.target.value);
-    if (e.target.value && prices) {
-      setTokenTwoAmount((e.target.value * prices.ratio).toFixed(2))
-    } else {
-      setTokenTwoAmount(null);
-    }
+    setTokenOneRecord(e.target.value);
+    // if (e.target.value && prices) {
+    //   setTokenTwoID((e.target.value * prices.ratio).toFixed(2))
+    // } else {
+    //   setTokenTwoID(null);
+    // }
   }
 
   function switchTokens() {
     setPrices(null);
-    setTokenOneAmount(null);
-    setTokenTwoAmount(null);
+    setTokenOneRecord(null);
+    setTokenTwoID(null);
     const one = tokenOne;
     const two = tokenTwo;
     setTokenOne(two);
     setTokenTwo(one);
-    fetchPrices(two.token_id, one.token_id);
+    // fetchPrices(two.token_id, one.token_id);
+    fetchBalance(two.token_id, one.token_id);
   }
 
   function openModal(asset) {
@@ -180,16 +204,16 @@ function Swap(props) {
 
   function modifyToken(i) {
     setPrices(null);
-    setTokenOneAmount(null);
-    setTokenTwoAmount(null);
+    setTokenOneRecord(null);
+    setTokenTwoID(null);
     if (changeToken === 1) {
       setTokenOne(tokenList[i]);
-      fetchPrices(tokenList[i].token_id, tokenTwo.token_id)
+      // fetchPrices(tokenList[i].token_id, tokenTwo.token_id)
       fetchBalance(tokenList[i].token_id, tokenTwo.token_id)
 
     } else {
       setTokenTwo(tokenList[i]);
-      fetchPrices(tokenOne.token_id, tokenList[i].token_id)
+      // fetchPrices(tokenOne.token_id, tokenList[i].token_id)
       fetchBalance(tokenOne.token_id, tokenList[i].token_id)
 
     }
@@ -197,37 +221,11 @@ function Swap(props) {
     setIsOpen(false);
   }
 
-  async function fetchPrices(one, two) {
-
-    const res = { 'data': '22' }
-
-
-    setPrices(res.data)
-  }
-
   async function fetchDexSwap() {
+    console.log("Work")
 
-    // const allowance = await axios.get(`https://api.1inch.io/v5.0/1/approve/allowance?tokenAddress=${tokenOne.token_id}&walletAddress=${address}`)
-
-    // if (allowance.data.allowance === "0") {
-
-    //   const approve = await axios.get(`https://api.1inch.io/v5.0/1/approve/transaction?tokenAddress=${tokenOne.token_id}`)
-
-    //   setTxDetails(approve.data);
-    //   console.log("not approved")
-    //   return
-
-    // }
-
-    // const tx = await axios.get(
-    //   `https://api.1inch.io/v5.0/1/swap?fromTokenAddress=${tokenOne.token_id}&toTokenAddress=${tokenTwo.token_id}&amount=${tokenOneAmount.padEnd(tokenOne.decimals + tokenOneAmount.length, '0')}&fromAddress=${address}&slippage=${slippage}`
-    // )
-
-    // let decimals = Number(`1E${tokenTwo.decimals}`)
-    // setTokenTwoAmount((Number(tx.data.toTokenAmount) / decimals).toFixed(2));
-
-    // setTxDetails(tx.data.tx);
-
+    console.log(tokenList[0].record + " " + tokenList[0].token_id + "u64 " + slippage + "u128")
+    execute();
   }
 
   // useEffect(()=>{
@@ -276,8 +274,8 @@ function Swap(props) {
       <div>Slippage Tolerance</div>
       <div>
         <Radio.Group value={slippage} onChange={handleSlippageChange}>
-          <Radio.Button value={0.5}>0.5%</Radio.Button>
-          <Radio.Button value={2.5}>2.5%</Radio.Button>
+          <Radio.Button value={1}>1.0%</Radio.Button>
+          <Radio.Button value={2}>2.0%</Radio.Button>
           <Radio.Button value={5}>5.0%</Radio.Button>
         </Radio.Group>
       </div>
@@ -326,11 +324,11 @@ function Swap(props) {
         <div className="inputs">
           <input className="inputBox"
             placeholder="0"
-            value={tokenOneAmount}
-            onChange={changeAmount}
+            value={tokenOneRecord}
+          // onChange={changeAmount}
           // disabled={!prices}
           />
-          <input className="inputBox" placeholder="0" value={tokenTwoAmount} disabled={true} />
+          <input className="inputBox" placeholder="0" value={tokenTwoID} />
           <div className="switchButton" onClick={switchTokens}>
             <img src={Switch} alt="logo" className="switchArrow" />
           </div>
@@ -349,8 +347,8 @@ function Swap(props) {
           <p className="balanceText balanceTextTwo">Balance: {balanceTwo}</p>
 
         </div>
-        <div className="swapButton" disabled={!tokenOneAmount || !isConnected} onClick={fetchDexSwap}>Swap</div>
-        {/* <div>
+        <div className="swapButton" disabled={!isConnected} onClick={fetchDexSwap}>Swap</div>
+        <div>
           <button
             onClick={() => execute()}
             disabled={loading}
@@ -360,7 +358,7 @@ function Swap(props) {
           {error && <p>error executing program: {error}</p>}
           {loading && <p>executing program...</p>}
           {transactionId && !loading && !error && <p>Transaction Id: {transactionId}</p>}
-        </div> */}
+        </div>
       </div>
 
     </>
