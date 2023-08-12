@@ -165,10 +165,8 @@ function Swap(props) {
     setbalanceTwo(bal_two)
   }
   useEffect(() => {
-    console.log(tokenList)
     fetchTokensList()
     fetchBalance(tokenList[0].token_id, tokenList[1].token_id)
-
   }, [])
 
 
@@ -222,9 +220,9 @@ function Swap(props) {
   }
 
   async function fetchDexSwap() {
-    console.log("Work")
+    console.log("Inputs Value:")
 
-    console.log(tokenList[0].record + " " + tokenList[0].token_id + "u64 " + slippage + "u128")
+    console.log(tokenList[0].record + " " + tokenList[1].token_id.replace('u64.private', '') + "u64 " + slippage + "u128")
     execute();
   }
 
