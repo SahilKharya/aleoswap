@@ -5,7 +5,6 @@ import {
   SettingOutlined,
 } from "@ant-design/icons";
 import tokenList from "../tokenList.json";
-import axios from "axios";
 import Switch from '../asset/Swap_Button.png';
 import { useRecords, useExecuteProgram } from '@puzzlehq/sdk';
 
@@ -19,7 +18,6 @@ function Swap(props) {
   const [tokenTwo, setTokenTwo] = useState(tokenList[1]);
   const [isOpen, setIsOpen] = useState(false);
   const [changeToken, setChangeToken] = useState(1);
-  const [prices, setPrices] = useState(null);
   const [balanceOne, setbalanceOne] = useState(null);
   const [balanceTwo, setbalanceTwo] = useState(null);
 
@@ -28,19 +26,6 @@ function Swap(props) {
     data: null,
     value: null,
   });
-
-  // const {data, sendTransaction} = useSendTransaction({
-  //   request: {
-  //     from: address,
-  //     to: String(txDetails.to),
-  //     data: String(txDetails.data),
-  //     value: String(txDetails.value),
-  //   }
-  // })
-
-  // const { isLoading, isSuccess } = useWaitForTransaction({
-  //   hash: data?.hash,
-  // })
 
   function correctJSONString(str) {
     // Wrap keys with double quotes
@@ -176,22 +161,15 @@ function Swap(props) {
 
   function changeAmount(e) {
     setTokenOneRecord(e.target.value);
-    // if (e.target.value && prices) {
-    //   setTokenTwoID((e.target.value * prices.ratio).toFixed(2))
-    // } else {
-    //   setTokenTwoID(null);
-    // }
   }
 
   function switchTokens() {
-    setPrices(null);
     setTokenOneRecord(null);
     setTokenTwoID(null);
     const one = tokenOne;
     const two = tokenTwo;
     setTokenOne(two);
     setTokenTwo(one);
-    // fetchPrices(two.token_id, one.token_id);
     fetchBalance(two.token_id, one.token_id);
   }
 
@@ -201,17 +179,14 @@ function Swap(props) {
   }
 
   function modifyToken(i) {
-    setPrices(null);
     setTokenOneRecord(null);
     setTokenTwoID(null);
     if (changeToken === 1) {
       setTokenOne(tokenList[i]);
-      // fetchPrices(tokenList[i].token_id, tokenTwo.token_id)
       fetchBalance(tokenList[i].token_id, tokenTwo.token_id)
 
     } else {
       setTokenTwo(tokenList[i]);
-      // fetchPrices(tokenOne.token_id, tokenList[i].token_id)
       fetchBalance(tokenOne.token_id, tokenList[i].token_id)
 
     }
@@ -225,47 +200,6 @@ function Swap(props) {
     console.log(tokenList[0].record + " " + tokenList[1].token_id.replace('u64.private', '') + "u64 " + slippage + "u128")
     execute();
   }
-
-  // useEffect(()=>{
-
-  //     if(txDetails.to && isConnected){
-  //       sendTransaction();
-  //     }
-  // }, [txDetails])
-
-  // useEffect(()=>{
-
-  //   messageApi.destroy();
-
-  //   if(isLoading){
-  //     messageApi.open({
-  //       type: 'loading',
-  //       content: 'Transaction is Pending...',
-  //       duration: 0,
-  //     })
-  //   }    
-
-  // },[isLoading])
-
-  // useEffect(()=>{
-  //   messageApi.destroy();
-  //   if(isSuccess){
-  //     messageApi.open({
-  //       type: 'success',
-  //       content: 'Transaction Successful',
-  //       duration: 1.5,
-  //     })
-  //   }else if(txDetails.to){
-  //     messageApi.open({
-  //       type: 'error',
-  //       content: 'Transaction Failed',
-  //       duration: 1.50,
-  //     })
-  //   }
-
-
-  // },[isSuccess])
-
 
   const settings = (
     <>
@@ -323,8 +257,6 @@ function Swap(props) {
           <input className="inputBox"
             placeholder="0"
             value={tokenOneRecord}
-          // onChange={changeAmount}
-          // disabled={!prices}
           />
           <input className="inputBox" placeholder="0" value={tokenTwoID} />
           <div className="switchButton" onClick={switchTokens}>
@@ -348,7 +280,7 @@ function Swap(props) {
         <div className="swapButton" disabled={!isConnected} onClick={fetchDexSwap}>Swap
 
         </div>
-        
+
         <div>
           {error && <p>error executing program: {error}</p>}
           {loading && <p>executing program...</p>}

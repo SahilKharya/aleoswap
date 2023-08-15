@@ -2,7 +2,6 @@ import React from 'react'
 import { motion } from 'framer-motion';
 import Logo from '../asset/LargeLogo.png';
 import Globe from '../asset/globe.svg';
-import Text from '../asset/text.svg';
 import { Link } from "react-router-dom";
 
 function Home(props) {
