@@ -277,11 +277,11 @@ function Swap(props) {
         </div>
         {!loading && <div className="swapButton" disabled={!isConnected} onClick={fetchDexSwap}>Swap
         </div>}
-        {loading && <div className="swapButton">Swap in Progress</div>}
+        {loading && <div className="swapButton disable_btn">Swap in Progress</div>}
 
 
       </div>
-      <div className="m-t-20">
+      <div className="m-t-20 ext">
         {!loading && error && <p>error executing program: {error}</p>}
         {transactionId && !loading && !error && <p>Transaction Id: {transactionId}</p>}
       </div>
