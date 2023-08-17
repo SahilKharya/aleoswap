@@ -16,6 +16,10 @@ header {
   height: 125px;
 }
 
+.m-t-20 {
+  margin-top: 30px;
+}
+
 .largeLogo {
   width: 600px;
   height: 500px;
@@ -95,6 +99,7 @@ header {
 .mainWindow {
   height: calc(100vh - 170px);
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
 }
@@ -224,6 +229,7 @@ header {
   font-size: 16px;
   left: 19px;
 }
+
 .balanceText {
   position: absolute;
   height: 15px;
@@ -250,6 +256,7 @@ header {
 .assetThree {
   top: 249px;
 }
+
 .asset_One {
   top: 19px;
 }
@@ -377,4 +384,41 @@ header {
 
 .m_v_24 {
   margin: 24px 0;
+}
+
+@keyframes rotatingBoxShadow {
+  0% {
+    box-shadow: 11px 0 5px -2px #A7CF0AA8;
+  }
+
+  25% {
+    box-shadow: 0 11px 5px -2px #A7CF0AA8;
+  }
+
+  50% {
+    box-shadow: -11px 0 5px -2px #A7CF0AA8;
+  }
+
+  75% {
+    box-shadow: 0 -11px 5px -2px #A7CF0AA8;
+  }
+
+  100% {
+    box-shadow: 10px 0 5px -2px #A7CF0AA8;
+  }
+
+  /* 0% {
+    box-shadow: -20px 10px 42px 15px rgba(167, 207, 10, 0.65);
+  }
+  50% {
+    box-shadow: 20px 10px 42px 15px rgba(167, 207, 10, 0.65);
+  }
+  100% {
+    box-shadow: -20px 10px 42px 15px rgba(167, 207, 10, 0.65);
+  } */
+}
+
+.rotating-shadow {
+  animation: rotatingBoxShadow 2s linear infinite;
+  position: relative;
 }

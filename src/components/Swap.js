@@ -23,9 +23,6 @@ function Swap(props) {
   const [balanceTwo, setbalanceTwo] = useState(null);
   // const [tokenList, setTokenList] = useState([]);
   const [tokenList, setTokenList] = useState(list_tokens);
-
-  console.log(list_tokens)
-  console.log(tokenList)
   const [tokenOne, setTokenOne] = useState(tokenList[0]);
   const [tokenTwo, setTokenTwo] = useState(tokenList[1]);
 
@@ -60,12 +57,13 @@ function Swap(props) {
   //     assert_eq r3 true;
   let inputs = '';
   if (tokenList && tokenList.length > 1) {
+
     inputs = tokenList[0].record + " " + tokenList[1].token_id.replace('u64.private', '') + "u64 " + slippage + "u128"
     // Handle slippage and other parts of the input separately if needed
     // inputs = "{owner:aleo1wxulzwkmyp45j73kz22lzys8xfc7g26fa90tydc0ctm34s4yqc8svsawj7.private,amount:51u128.private,token_id:234u64.private,_nonce:3190987288161617818003687883709403124823136738918543355387177333557526155508group.public} 36u64 2u128"
-              // {owner:aleo1wxulzwkmyp45j73kz22lzys8xfc7g26fa90tydc0ctm34s4yqc8svsawj7.private,amount:22u128.private,token_id:222u64.private,_nonce:6907203199694275432003410649292689215298215923460989556166877178358311583427group.public} 234u64 2u128
+    // {owner:aleo1wxulzwkmyp45j73kz22lzys8xfc7g26fa90tydc0ctm34s4yqc8svsawj7.private,amount:22u128.private,token_id:222u64.private,_nonce:6907203199694275432003410649292689215298215923460989556166877178358311583427group.public} 234u64 2u128
   }
-  
+
   const {
     execute,
     loading,
@@ -84,6 +82,12 @@ function Swap(props) {
   useEffect(() => {
     fetchTokensList();
   }, [records]);
+  useEffect(() => {
+    if (tokenList && tokenList.length > 1) {
+      setTokenOne(tokenList[0]);
+      setTokenTwo(tokenList[1]);
+    }
+  }, [tokenList]);
 
   async function fetchTokensList() {
     const groupedByTokenId = records.reduce((acc, record) => {
@@ -112,7 +116,6 @@ function Swap(props) {
           .replace(/ /g, '').replace(/"/g, '')
       };
     });
-    console.log(updatedTokenList)
 
     for (let i = 0; i < updatedTokenList.length; i++) {
       updatedTokenList[i].img = list_tokens[i].img;
@@ -121,9 +124,8 @@ function Swap(props) {
     }
     setTokenList(updatedTokenList);
 
-    console.log(updatedTokenList)
     console.log(tokenList)
-    fetchBalance(list_tokens[0]?.token_id, list_tokens[1]?.token_id);
+    fetchBalance(tokenList[0]?.token_id, tokenList[1]?.token_id);
   }
 
   async function fetchBalance(one, two) {
@@ -237,7 +239,7 @@ function Swap(props) {
           })}
         </div>
       </Modal>
-      <div className="tradeBox">
+      <div className={loading ? 'tradeBox rotating-shadow' : 'tradeBox'}>
         <div className="tradeBoxHeader">
           <h4 className="m_v_24">Swap</h4>
           <Popover
@@ -273,17 +275,16 @@ function Swap(props) {
           <p className="balanceText balanceTextTwo">Balance: {balanceTwo}</p>
 
         </div>
-        <div className="swapButton" disabled={!isConnected} onClick={fetchDexSwap}>Swap
+        {!loading && <div className="swapButton" disabled={!isConnected} onClick={fetchDexSwap}>Swap
+        </div>}
+        {loading && <div className="swapButton">Swap in Progress</div>}
 
-        </div>
 
-        <div>
-          {error && <p>error executing program: {error}</p>}
-          {loading && <p>executing program...</p>}
-          {transactionId && !loading && !error && <p>Transaction Id: {transactionId}</p>}
-        </div>
       </div>
-
+      <div className="m-t-20">
+        {!loading && error && <p>error executing program: {error}</p>}
+        {transactionId && !loading && !error && <p>Transaction Id: {transactionId}</p>}
+      </div>
     </>
   );
 }
