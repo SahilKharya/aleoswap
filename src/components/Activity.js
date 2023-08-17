@@ -5,7 +5,7 @@ function Activity() {
     const { records, error, loading } = useRecords(
         {
             program_id: 'leoswapxyz_v2.aleo', // any deployed aleo program id
-            type: 'unspent', // one of 'all' | 'spent' | 'unspent'
+            type: 'spent', // one of 'all' | 'spent' | 'unspent'
         } // optional params
     );
     console.log(records);
