@@ -20,12 +20,9 @@ function Swap(props) {
   const [changeToken, setChangeToken] = useState(1);
   const [balanceOne, setbalanceOne] = useState(null);
   const [balanceTwo, setbalanceTwo] = useState(null);
+  const [tokenLisdt, setTokenList] = useState([]);
 
-  const [txDetails, setTxDetails] = useState({
-    to: null,
-    data: null,
-    value: null,
-  });
+  const [tokens, setTokens] = useState(tokenList)
 
   function correctJSONString(str) {
     // Wrap keys with double quotes
@@ -33,10 +30,8 @@ function Swap(props) {
 
     // Wrap non-standard values with double quotes
     str = str.replace(/: ([a-z0-9_.]+)(,|\n|})/gi, ": \"$1\"$2");
-
     return str;
   }
-
 
   const { records } = useRecords(
     {
@@ -57,11 +52,10 @@ function Swap(props) {
   } = useExecuteProgram({
     programId: "leoswapxyz_v2.aleo",
     functionName: 'swap_exact_in',
-    // Aleo program inputs need their types specified, our program takes in 32 bit integers
-    // so the inputs should look like "2i32 3i32"
-    // inputs: '{owner: aleo1wxulzwkmyp45j73kz22lzys8xfc7g26fa90tydc0ctm34s4yqc8svsawj7.private, amount: 22u128.private,  token_id: 222u64.private,  _nonce: 6907203199694275432003410649292689215298215923460989556166877178358311583427group.public}  234u64  0u128'
-    inputs: tokenList[0].record + " " + tokenList[1].token_id.replace('u64.private', '') + "u64 " + slippage + "u128"
+    inputs: "{owner:aleo1wxulzwkmyp45j73kz22lzys8xfc7g26fa90tydc0ctm34s4yqc8svsawj7.private,amount:51u128.private,token_id:234u64.private,_nonce:3190987288161617818003687883709403124823136738918543355387177333557526155508group.public} 36u64 2u128"
+    // inputs: tokenList[0].record + " " + tokenList[1].token_id.replace('u64.private', '') + "u64 " + slippage + "u128"
   });
+
   //   function swap_exact_in:
   //     input r0 as Token.record;
   //     input r1 as u64.private;
@@ -78,64 +72,79 @@ function Swap(props) {
   //     assert_eq r3 true;
 
 
-
-  const [processedRecords, setProcessedRecords] = useState([]);
-
   useEffect(() => {
-    const processRecordsAsync = async () => {
-      if (records) {
-        // Any asynchronous operation on records here.
-        // For example, fetching additional data or processing records.
-        // For demonstration, I'm slicing the records array.
-        console.log(records)
-        const newRecords = records.slice(0, 5);  // change this to your actual async operation
-        setProcessedRecords(newRecords);
-      }
-    };
+    if (records && records.length > 0) {
+      // Create a new array based on the current tokens
+      const updatedTokens = tokens.map(token => {
+        // Find the record that matches the current token's token_id
+        const matchedRecord = records.find(record => {
+          const parsedRecord = JSON.parse(correctJSONString(record.plaintext)); // I'm assuming this is how you extract the token_id from your record.
+          return parsedRecord.token_id === token.token_id;
+        });
 
-    processRecordsAsync();
+        // If a matched record is found, update the record field of the token
+        if (matchedRecord) {
+          return {
+            ...token,
+            record: matchedRecord.plaintext
+          };
+        }
+
+        // Otherwise, return the token as is
+        return token;
+      });
+
+      // Set the updated tokens into state
+      setTokens(updatedTokens);
+    }
     fetchTokensList()
-    fetchBalance(tokenList[0].token_id, tokenList[1].token_id)
-
   }, [records]);
 
-  async function fetchTokensList() {
-    console.log(records)
-    const groupedByTokenId = records.reduce((acc, record, index) => {
-      // Parse the plaintext to get the token_id
-      const parsedPlaintext = JSON.parse(correctJSONString(record.plaintext))
-      const tokenId = parsedPlaintext.token_id;
-      tokenList[index].record = record.plaintext.replace(/"([^"]+)":/g, '$1:').replace(/\n/g, '').replace(/,/g, ', ').replace(/   /g, ' ');
 
-      // Initialize the array for the token_id if it doesn't exist
+
+  // useEffect(() => {
+  //   fetchTokensList();
+  // }, [records]);
+
+  async function fetchTokensList() {
+    const groupedByTokenId = records.reduce((acc, record) => {
+      const parsedPlaintext = JSON.parse(correctJSONString(record.plaintext));
+      const tokenId = parsedPlaintext.token_id;
+
       if (!acc[tokenId]) {
         acc[tokenId] = [];
       }
-
-      // Push the current record to the grouped array
-      acc[tokenId].push(JSON.parse(correctJSONString(record.plaintext)));
+      acc[tokenId].push(parsedPlaintext);
       return acc;
     }, {});
 
-    Object.values(groupedByTokenId).forEach((record, index) => {
-      tokenList[index].amount = 0
-
-      record.forEach((r, i) => {
+    const updatedTokenList = Object.values(groupedByTokenId).map((recordGroup) => {
+      const totalAmount = recordGroup.reduce((sum, r) => {
         let amountVal = parseInt(r.amount.replace(/u128\.private/g, ""));
-        tokenList[index].amount += amountVal
-        tokenList[index].token_id = r.token_id
-      })
-    })
-    console.log(tokenList)
+        return sum + amountVal;
+      }, 0);
+
+      return {
+        amount: totalAmount,
+        token_id: recordGroup[0].token_id,
+        record: correctJSONString(JSON.stringify(recordGroup[0]))
+          .replace(/"([^"]+)":/g, '$1:')
+          .replace(/\n/g, '')
+          .replace(/,/g, ', ')
+          .replace(/   /g, ' ').replace(/"/g, '')
+      };
+    });
+
+    setTokenList(updatedTokenList);
+    console.log(tokenList);
+    fetchBalance(updatedTokenList[0]?.token_id, updatedTokenList[1]?.token_id);
   }
 
   async function fetchBalance(one, two) {
     let bal_one = 0;
     let bal_two = 0;
-    console.log(one)
-    console.log(two)
-    records.forEach((record, index) => {
-      const plaintextObj = JSON.parse(correctJSONString(record.plaintext))
+    records.forEach((record) => {
+      const plaintextObj = JSON.parse(correctJSONString(record.plaintext));
 
       if (plaintextObj.token_id === one) {
         const amountNumber = parseInt(plaintextObj.amount.replace(/u128\.private/g, ""));
@@ -149,10 +158,11 @@ function Swap(props) {
     setbalanceOne(bal_one)
     setbalanceTwo(bal_two)
   }
-  useEffect(() => {
-    fetchTokensList()
-    fetchBalance(tokenList[0].token_id, tokenList[1].token_id)
-  }, [])
+
+  // useEffect(() => {
+  //   fetchTokensList();
+  // }, []);
+
 
 
   function handleSlippageChange(e) {
