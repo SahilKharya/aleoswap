@@ -422,10 +422,16 @@ header {
   animation: rotatingBoxShadow 2s linear infinite;
   position: relative;
 }
-.disable_btn{
+
+.disable_btn {
   cursor: none;
   background: #82a008a8;
 }
+
 .ext {
   height: 70px;
+}
+
+.tx_link {
+  color: white;
 }

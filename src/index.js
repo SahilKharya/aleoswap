@@ -4,7 +4,6 @@ import App from './App.js';
 import { BrowserRouter } from 'react-router-dom';
 import { PuzzleWalletProvider } from '@puzzlehq/sdk';
 import "./index.css";
-import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root')

@@ -4,11 +4,10 @@ import {
     useRecords,
     useExecuteProgram,
 } from '@puzzlehq/sdk';
-import { Popover, Radio, Modal, message } from "antd";
+import { Modal } from "antd";
 import list_tokens from "../tokenList.json";
 import {
-    DownOutlined,
-    SettingOutlined,
+    DownOutlined
 } from "@ant-design/icons";
 function Mint() {
     const [address, setAddress] = useState(null);
@@ -179,7 +178,7 @@ function Mint() {
                     })}
                 </div>
             </Modal>
-            <div className="tradeBox">
+            <div className={loading ? 'tradeBox rotating-shadow' : 'tradeBox'}>
                 <div className="tradeBoxHeader">
                     <h4 className="m_v_24">Mint Token</h4>
                 </div>
@@ -197,15 +196,18 @@ function Mint() {
                     <p className="balanceText balanceTextOne">Balance: {balanceOne}</p>
 
                 </div>
-                <div className="swapButton" disabled={loading || !isConnected} onClick={handleMint}>Mint</div>
-                <div>
-                    {error && <p>error executing program: {error}</p>}
-                    {loading && <p>executing program...</p>}
-                    {transactionId && !loading && !error && <p>Transaction Id: {transactionId}</p>}
-                    {outputPrivate && (
-                        <p>{"Result:" + outputPrivate}</p>
-                    )}
-                </div>
+                {/* <div className="swapButton" disabled={loading || !isConnected} onClick={handleMint}>Mint</div> */}
+                {!loading && <div className="swapButton" disabled={!isConnected} onClick={handleMint}>Mint</div>}
+                {loading && <div className="swapButton disable_btn">Minting in Progress</div>}
+
+            </div>
+            <div>
+                {!loading && error && <p>error executing program: {error}</p>}
+                {transactionId && !loading && !error && <p>Transaction Id:<br />
+                    <a className="tx_link" href={`https://explorer.hamp.app/transaction?id=${transactionId}`}>
+                        {transactionId}
+                    </a>
+                </p>}
             </div>
         </>
     )

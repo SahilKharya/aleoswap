@@ -20,10 +20,10 @@ function Header(props) {
           <Link to="/mint" className="link">
             <div className="headerItem">Mint</div>
           </Link>)}
-          {isConnected && (
+          {/* {isConnected && (
           <Link to="/create" className="link">
             <div className="headerItem">Create</div>
-          </Link>)}
+          </Link>)} */}
       </div>
       <div className="rightH">
         <div className="connectButton" onClick={connect}>

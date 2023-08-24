@@ -327,7 +327,11 @@ function Swap(props) {
       </div>
       <div className="m-t-20 ext">
         {!loading && error && <p>error executing program: {error}</p>}
-        {transactionId && !loading && !error && <p>Transaction Id: {transactionId}</p>}
+        {transactionId && !loading && !error && <p>Transaction Id:<br />
+          <a className="tx_link" href={`https://explorer.hamp.app/transaction?id=${transactionId}`}>
+            {transactionId}
+          </a>
+        </p>}
       </div>
     </>
   );
