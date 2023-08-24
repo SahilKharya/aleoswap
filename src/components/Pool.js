@@ -20,7 +20,7 @@ function Pool() {
         outputConstant,
         error,
     } = useExecuteProgram({
-        programId: "leoswapxyz_v2.aleo",
+        programId: "rfq_v000003.aleo",
         functionName: 'create_pool',
         // Aleo program inputs need their types specified, our program takes in 32 bit integers
         // so the inputs should look like "2i32 3i32"

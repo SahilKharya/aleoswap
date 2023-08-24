@@ -10,12 +10,13 @@ import { useRecords, useExecuteProgram } from '@puzzlehq/sdk';
 
 function Swap(props) {
   // const list_tokens = [
-
+  const [data, setData] = useState(null);
+  const [apiError, setApiError] = useState(null);
   const { address, isConnected } = props;
   const [messageApi, contextHolder] = message.useMessage();
   const [slippage, setSlippage] = useState(2);
   const [tokenOneRecord, setTokenOneRecord] = useState(null);
-  const [tokenTwoID, setTokenTwoID] = useState(null);
+  const [tokenTwoInput, setTokenTwoInput] = useState(null);
 
   const [isOpen, setIsOpen] = useState(false);
   const [changeToken, setChangeToken] = useState(1);
@@ -36,8 +37,8 @@ function Swap(props) {
 
   const { records } = useRecords(
     {
-      program_id: 'leoswapxyz_v2.aleo', // any deployed aleo program id
-      type: 'unspent', // one of 'all' | 'spent' | 'unspent'
+      program_id: 'rfq_v000003.aleo', // any deployed aleo program id
+      type: 'all', // one of 'all' | 'spent' | 'unspent'
     } // optional params
   );
 
@@ -55,10 +56,12 @@ function Swap(props) {
   //     input r2 as u128;
   //     contains registered_tokens[r1] into r3;
   //     assert_eq r3 true;
-  let inputs = '';
-  if (tokenList && tokenList.length > 1) {
 
-    inputs = tokenList[0].record + " " + tokenList[1].token_id.replace('u64.private', '') + "u64 " + slippage + "u128"
+  let inputs = '';
+  if (data) {
+
+    inputs = tokenOne.record + " " + data.quote + " " + data.signature
+    console.log(inputs)
     // Handle slippage and other parts of the input separately if needed
     // inputs = "{owner:aleo1wxulzwkmyp45j73kz22lzys8xfc7g26fa90tydc0ctm34s4yqc8svsawj7.private,amount:51u128.private,token_id:234u64.private,_nonce:3190987288161617818003687883709403124823136738918543355387177333557526155508group.public} 36u64 2u128"
     // {owner:aleo1wxulzwkmyp45j73kz22lzys8xfc7g26fa90tydc0ctm34s4yqc8svsawj7.private,amount:22u128.private,token_id:222u64.private,_nonce:6907203199694275432003410649292689215298215923460989556166877178358311583427group.public} 234u64 2u128
@@ -74,8 +77,8 @@ function Swap(props) {
     outputConstant,
     error,
   } = useExecuteProgram({
-    programId: "leoswapxyz_v2.aleo",
-    functionName: 'swap_exact_in',
+    programId: "rfq_v000003.aleo",
+    functionName: 'quote_swap',
     inputs: inputs
   });
 
@@ -88,6 +91,11 @@ function Swap(props) {
       setTokenTwo(tokenList[1]);
     }
   }, [tokenList]);
+  useEffect(() => {
+    if (tokenOneRecord) {
+      querySwapRate(tokenOneRecord, tokenOne.token_id, tokenTwo.token_id)
+    }
+  }, [tokenOneRecord]);
 
   async function fetchTokensList() {
     const groupedByTokenId = records.reduce((acc, record) => {
@@ -106,50 +114,63 @@ function Swap(props) {
         let amountVal = parseInt(r.amount.replace(/u128\.private/g, ""));
         return sum + amountVal;
       }, 0);
-
+      let id = recordGroup[0].token_id.replace(/u64\.private/g, "");
+      let rec = correctJSONString(JSON.stringify(recordGroup[0]))
+        .replace(/"([^"]+)":/g, '$1:')
+        .replace(/\n/g, '')
+        .replace(/ /g, '').replace(/"/g, '')
+      if (id === '1') {
+        tokenList[0].amount = totalAmount;
+        tokenList[0].record = rec;
+      } else if (id === '2') {
+        tokenList[1].amount = totalAmount;
+        tokenList[1].record = rec;
+      } else if (id === '3') {
+        tokenList[2].amount = totalAmount;
+        tokenList[2].record = rec;
+      } else if (id === '4') {
+        tokenList[3].amount = totalAmount;
+        tokenList[3].record = rec;
+      }
       return {
-        amount: totalAmount,
-        token_id: recordGroup[0].token_id,
-        record: correctJSONString(JSON.stringify(recordGroup[0]))
-          .replace(/"([^"]+)":/g, '$1:')
-          .replace(/\n/g, '')
-          .replace(/ /g, '').replace(/"/g, '')
+        tokenList
       };
     });
 
-    for (let i = 0; i < updatedTokenList.length; i++) {
-      updatedTokenList[i].img = list_tokens[i].img;
-      updatedTokenList[i].name = list_tokens[i].name;
-      updatedTokenList[i].ticker = list_tokens[i].ticker;
-    }
-    setTokenList(updatedTokenList);
-
+    setTokenList(tokenList);
     console.log(tokenList)
-    fetchBalance(tokenList[0]?.token_id, tokenList[1]?.token_id);
+    fetchBalance(tokenList[0]?.token_id);
   }
 
   async function fetchBalance(one, two) {
-    let bal_one = 0;
-    let bal_two = 0;
-    records.forEach((record) => {
-      const plaintextObj = JSON.parse(correctJSONString(record.plaintext));
+    // let bal_one = 0;
+    // let bal_two = 0;
+    // records.forEach((record) => {
+    //   const plaintextObj = JSON.parse(correctJSONString(record.plaintext));
 
-      if (plaintextObj.token_id === one) {
-        const amountNumber = parseInt(plaintextObj.amount.replace(/u128\.private/g, ""));
-        bal_one += amountNumber;
-      }
-      if (plaintextObj.token_id === two) {
-        const amountNumber = parseInt(plaintextObj.amount.replace(/u128\.private/g, ""));
-        bal_two += amountNumber;
-      }
-    });
-    setbalanceOne(bal_one)
-    setbalanceTwo(bal_two)
+    //   if (plaintextObj.token_id === one) {
+    //     const amountNumber = parseInt(plaintextObj.amount.replace(/u128\.private/g, ""));
+    //     bal_one += amountNumber;
+    //   }
+    //   if (plaintextObj.token_id === two) {
+    //     const amountNumber = parseInt(plaintextObj.amount.replace(/u128\.private/g, ""));
+    //     bal_two += amountNumber;
+    //   }
+    // });
+    // setbalanceOne(bal_one)
+    // setbalanceTwo(bal_two)
+    setbalanceOne(tokenList[one - 1].amount);
+    setbalanceTwo(tokenList[two - 1].amount);
   }
 
-  // useEffect(() => {
-  //   fetchTokensList();
-  // }, []);
+
+  useEffect(() => {
+    if (data) {
+      let amount = data.quote.match(/amount_out:(\d+u\d+)/);
+      setTokenTwoInput(amount[1].replace(/u128/g, ""));
+      inputs = tokenOne.record + " " + data.quote + " " + data.signature
+    }
+  }, [data]);
 
 
 
@@ -157,13 +178,13 @@ function Swap(props) {
     setSlippage(e.target.value);
   }
 
-  function changeAmount(e) {
+  function changeTokenOne(e) {
     setTokenOneRecord(e.target.value);
   }
 
   function switchTokens() {
     setTokenOneRecord(null);
-    setTokenTwoID(null);
+    setTokenTwoInput(null);
     const one = tokenOne;
     const two = tokenTwo;
     setTokenOne(two);
@@ -178,7 +199,7 @@ function Swap(props) {
 
   function modifyToken(i) {
     setTokenOneRecord(null);
-    setTokenTwoID(null);
+    setTokenTwoInput(null);
     if (changeToken === 1) {
       setTokenOne(tokenList[i]);
       fetchBalance(tokenList[i].token_id, tokenTwo.token_id)
@@ -199,6 +220,26 @@ function Swap(props) {
     execute();
   }
 
+  function querySwapRate(amount_in, token_in, token_out) {
+    // const API_URL = 'https://ftoy1oiyo6.execute-api.us-east-1.amazonaws.com/default/leoswap-maker?amount_in=1000000000&token_in=1&token_out=4';
+    const market_query = `https://ftoy1oiyo6.execute-api.us-east-1.amazonaws.com/default/leoswap-maker?amount_in=${amount_in}&token_in=${token_in}&token_out=${token_out}`;
+
+    fetch(market_query)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Network response error');
+        }
+        return response.json();
+        console.log(response.json())
+      })
+      .then((data) => {
+        setData(data);
+      })
+      .catch((error) => {
+        setApiError(error);
+      });
+  }
+
   const settings = (
     <>
       <div>Slippage Tolerance</div>
@@ -211,6 +252,7 @@ function Swap(props) {
       </div>
     </>
   );
+
 
   return (
     <>
@@ -254,9 +296,11 @@ function Swap(props) {
         <div className="inputs">
           <input className="inputBox"
             placeholder="0"
-            value={tokenOneRecord}
+            value={tokenOneRecord || ''} onChange={changeTokenOne}  // Step 2: Attach event handler
+
           />
-          <input className="inputBox" placeholder="0" value={tokenTwoID} />
+          <input className="inputBox" placeholder="0"
+            value={tokenTwoInput} disabled={true} />
           <div className="switchButton" onClick={switchTokens}>
             <img src={Switch} alt="logo" className="switchArrow" />
           </div>
@@ -267,7 +311,7 @@ function Swap(props) {
           </div>
           <p className="balanceText balanceTextOne">Balance: {balanceOne}</p>
 
-          <div className="asset assetTwo" onClick={() => openModal(2)}>
+          <div className="asset assetTwo" onClick={() => openModal(2)} >
             <img src={tokenTwo.img} alt="assetOneLogo" className="assetLogo" />
             {tokenTwo.ticker}
             <DownOutlined />

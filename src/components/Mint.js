@@ -1,14 +1,25 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     useAccount,
+    useRecords,
     useExecuteProgram,
 } from '@puzzlehq/sdk';
-
+import { Popover, Radio, Modal, message } from "antd";
+import list_tokens from "../tokenList.json";
+import {
+    DownOutlined,
+    SettingOutlined,
+} from "@ant-design/icons";
 function Mint() {
     const [address, setAddress] = useState(null);
-    const [tokenId, setTokenId] = useState(null);
+    const [tokenId, setTokenId] = useState(1);
     const [supply, setSupply] = useState(null);
-    const { isConnected } = useAccount();
+    const { account, accounts, isConnected } = useAccount();
+    const [isOpen, setIsOpen] = useState(false);
+    const [changeToken, setChangeToken] = useState(1);
+    const [tokenList, setTokenList] = useState(list_tokens);
+    const [tokenOne, setTokenOne] = useState(tokenList[0]);
+    const [balanceOne, setbalanceOne] = useState(null);
     const {
         execute,
         loading,
@@ -19,7 +30,7 @@ function Mint() {
         outputConstant,
         error,
     } = useExecuteProgram({
-        programId: "leoswapxyz_v2.aleo",
+        programId: "rfq_v000003.aleo",
         functionName: 'mint_private',
         // Aleo program inputs need their types specified, our program takes in 32 bit integers
         // so the inputs should look like "2i32 3i32"
@@ -40,51 +51,163 @@ function Mint() {
     // cast r0 r2 r1 into r3 as Token.record;
     // output r3 as Token.record;
     // finalize r1;
+    function correctJSONString(str) {
+        // Wrap keys with double quotes
+        str = str.replace(/(\w+):/g, "\"$1\":");
+        // Wrap non-standard values with double quotes
+        str = str.replace(/: ([a-z0-9_.]+)(,|\n|})/gi, ": \"$1\"$2");
+        return str;
+    }
 
-    function changeAddress(e) {
-        setAddress(e.target.value);
+    const { records } = useRecords(
+        {
+            program_id: 'rfq_v000003.aleo', // any deployed aleo program id
+            type: 'all', // one of 'all' | 'spent' | 'unspent'
+        } // optional params
+    );
+    useEffect(() => {
+        setTokenId(tokenOne.token_id)
+    }, [tokenOne]);
+    useEffect(() => {
+        console.log(tokenId); // Logs the updated value after the component re-renders
+    }, [tokenId]);
+    useEffect(() => {
+        fetchTokensList();
+    }, [records]);
+    useEffect(() => {
+    }, [tokenList]);
+    // function changeAddress(e) {
+    //     setAddress(e.target.value);
+    // }
+    function openModal(asset) {
+        setChangeToken(asset);
+        setIsOpen(true);
+    }
+    function modifyToken(i) {
+        setSupply(null);
+        setTokenOne(tokenList[i]);
+        fetchBalance(tokenList[i].token_id)
+        setIsOpen(false);
+    }
+    async function fetchTokensList() {
+        const groupedByTokenId = records.reduce((acc, record) => {
+            const parsedPlaintext = JSON.parse(correctJSONString(record.plaintext));
+            const tokenId = parsedPlaintext.token_id;
+
+            if (!acc[tokenId]) {
+                acc[tokenId] = [];
+            }
+            acc[tokenId].push(parsedPlaintext);
+            return acc;
+        }, {});
+
+        const updatedTokenList = Object.values(groupedByTokenId).map((recordGroup) => {
+            const totalAmount = recordGroup.reduce((sum, r) => {
+                let amountVal = parseInt(r.amount.replace(/u128\.private/g, ""));
+                return sum + amountVal;
+            }, 0);
+            console.log(recordGroup[0])
+            let id = recordGroup[0].token_id.replace(/u64\.private/g, "");
+            let rec = correctJSONString(JSON.stringify(recordGroup[0]))
+                .replace(/"([^"]+)":/g, '$1:')
+                .replace(/\n/g, '')
+                .replace(/ /g, '').replace(/"/g, '')
+            if (id === '1') {
+                tokenList[0].amount = totalAmount;
+                tokenList[0].record = rec;
+            } else if (id === '2') {
+                tokenList[1].amount = totalAmount;
+                tokenList[1].record = rec;
+            } else if (id === '3') {
+                tokenList[2].amount = totalAmount;
+                tokenList[2].record = rec;
+            } else if (id === '4') {
+                tokenList[3].amount = totalAmount;
+                tokenList[3].record = rec;
+            }
+            return {
+                tokenList
+            };
+        });
+
+        setTokenList(tokenList);
+        console.log(updatedTokenList)
+
+        console.log(tokenList)
+        fetchBalance(tokenList[0]?.token_id);
+    }
+    async function fetchBalance(one) {
+        setAddress(account.address);
+        console.log(address)
+        // let bal_one = 0;
+        // records.forEach((record) => {
+        //     const plaintextObj = JSON.parse(correctJSONString(record.plaintext));
+        //     if (plaintextObj.token_id.replace(/u64\.private/g, "") === one) {
+        //         const amountNumber = parseInt(plaintextObj.amount.replace(/u128\.private/g, ""));
+        //         bal_one += amountNumber;
+        //     }
+        // });
+
+        setbalanceOne(tokenList[one - 1].amount);
+        console.log(supply)
+        console.log(tokenId)
+        console.log(tokenOne)
     }
     return (
-        <div className="tradeBox">
-            <div className="tradeBoxHeader">
-                <h4 className="m_v_24">Mint Token</h4>
-            </div>
-            <div className="inputs">
-                <input className="inputBox"
-                    placeholder="0"
-                    value={address}
-                    onChange={changeAddress}
-                />
-                <input className="inputBox"
-                    placeholder="0"
-                    value={tokenId}
-                    onChange={e => setTokenId(e.target.value)}
-                />
-                <input className="inputBox"
-                    placeholder="0"
-                    value={supply}
-                    onChange={e => setSupply(e.target.value)}
-                />
-                <div className="asset_2 asset_One">
-                    Address
+        <>
+            <Modal
+                open={isOpen}
+                footer={null}
+                onCancel={() => setIsOpen(false)}
+                title="Select a token"
+            >
+                <div className="modalContent">
+                    {tokenList?.map((e, i) => {
+                        return (
+                            <div
+                                className="tokenChoice"
+                                key={i}
+                                onClick={() => modifyToken(i)}
+                            >
+                                <img src={e.img} alt={e.ticker} className="tokenLogo" />
+                                <div className="tokenChoiceNames">
+                                    <div className="tokenName">{e.name}</div>
+                                    <div className="tokenTicker">{e.ticker}</div>
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
-                <div className="asset_2 asset_Two">
-                    Token ID
+            </Modal>
+            <div className="tradeBox">
+                <div className="tradeBoxHeader">
+                    <h4 className="m_v_24">Mint Token</h4>
                 </div>
-                <div className="asset_2 asset_Three">
-                    Supply
+                <div className="inputs">
+                    <input className="inputBox"
+                        placeholder="0"
+                        value={supply}
+                        onChange={e => setSupply(e.target.value)}
+                    />
+                    <div className="asset assetOne" onClick={() => openModal(1)}>
+                        <img src={tokenOne.img} alt="assetOneLogo" className="assetLogo" />
+                        {tokenOne.ticker}
+                        <DownOutlined />
+                    </div>
+                    <p className="balanceText balanceTextOne">Balance: {balanceOne}</p>
+
+                </div>
+                <div className="swapButton" disabled={loading || !isConnected} onClick={handleMint}>Mint</div>
+                <div>
+                    {error && <p>error executing program: {error}</p>}
+                    {loading && <p>executing program...</p>}
+                    {transactionId && !loading && !error && <p>Transaction Id: {transactionId}</p>}
+                    {outputPrivate && (
+                        <p>{"Result:" + outputPrivate}</p>
+                    )}
                 </div>
             </div>
-            <div className="swapButton" disabled={loading || !isConnected} onClick={handleMint}>Mint</div>
-            <div>
-                {error && <p>error executing program: {error}</p>}
-                {loading && <p>executing program...</p>}
-                {transactionId && !loading && !error && <p>Transaction Id: {transactionId}</p>}
-                {outputPrivate && (
-                    <p>{"Result:" + outputPrivate}</p>
-                )}
-            </div>
-        </div>
+        </>
     )
 }
 
