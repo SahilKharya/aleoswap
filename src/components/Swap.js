@@ -15,9 +15,9 @@ function Swap(props) {
   const { address, isConnected } = props;
   const [messageApi, contextHolder] = message.useMessage();
   const [slippage, setSlippage] = useState(2);
-  const [tokenOneRecord, setTokenOneRecord] = useState(null);
-  const [tokenTwoInput, setTokenTwoInput] = useState(null);
-
+  const [tokenOneAmount, setTokenOneAmount] = useState(null);
+  const [tokenTwoAmount, setTokenTwoAmount] = useState(null);
+  const decimals = Math.pow(10, 6)
   const [isOpen, setIsOpen] = useState(false);
   const [changeToken, setChangeToken] = useState(1);
   const [balanceOne, setbalanceOne] = useState(null);
@@ -38,7 +38,7 @@ function Swap(props) {
   const { records } = useRecords(
     {
       program_id: 'rfq_v000003.aleo', // any deployed aleo program id
-      type: 'all', // one of 'all' | 'spent' | 'unspent'
+      type: 'unspent', // one of 'all' | 'spent' | 'unspent'
     } // optional params
   );
 
@@ -61,10 +61,8 @@ function Swap(props) {
   if (data) {
 
     inputs = tokenOne.record + " " + data.quote + " " + data.signature
-    console.log(inputs)
-    // Handle slippage and other parts of the input separately if needed
+    // console.log(inputs)
     // inputs = "{owner:aleo1wxulzwkmyp45j73kz22lzys8xfc7g26fa90tydc0ctm34s4yqc8svsawj7.private,amount:51u128.private,token_id:234u64.private,_nonce:3190987288161617818003687883709403124823136738918543355387177333557526155508group.public} 36u64 2u128"
-    // {owner:aleo1wxulzwkmyp45j73kz22lzys8xfc7g26fa90tydc0ctm34s4yqc8svsawj7.private,amount:22u128.private,token_id:222u64.private,_nonce:6907203199694275432003410649292689215298215923460989556166877178358311583427group.public} 234u64 2u128
   }
 
   const {
@@ -92,10 +90,10 @@ function Swap(props) {
     }
   }, [tokenList]);
   useEffect(() => {
-    if (tokenOneRecord) {
-      querySwapRate(tokenOneRecord, tokenOne.token_id, tokenTwo.token_id)
+    if (tokenOneAmount) {
+      querySwapRate(tokenOneAmount * decimals, tokenOne.token_id, tokenTwo.token_id)
     }
-  }, [tokenOneRecord]);
+  }, [tokenOneAmount]);
 
   async function fetchTokensList() {
     const groupedByTokenId = records.reduce((acc, record) => {
@@ -120,16 +118,16 @@ function Swap(props) {
         .replace(/\n/g, '')
         .replace(/ /g, '').replace(/"/g, '')
       if (id === '1') {
-        tokenList[0].amount = totalAmount;
+        tokenList[0].amount = totalAmount / decimals;
         tokenList[0].record = rec;
       } else if (id === '2') {
-        tokenList[1].amount = totalAmount;
+        tokenList[1].amount = totalAmount / decimals;
         tokenList[1].record = rec;
       } else if (id === '3') {
-        tokenList[2].amount = totalAmount;
+        tokenList[2].amount = totalAmount / decimals;
         tokenList[2].record = rec;
       } else if (id === '4') {
-        tokenList[3].amount = totalAmount;
+        tokenList[3].amount = totalAmount / decimals;
         tokenList[3].record = rec;
       }
       return {
@@ -138,27 +136,10 @@ function Swap(props) {
     });
 
     setTokenList(tokenList);
-    console.log(tokenList)
-    fetchBalance(tokenList[0]?.token_id);
+    fetchBalance(tokenList[0]?.token_id, tokenList[1]?.token_id);
   }
 
   async function fetchBalance(one, two) {
-    // let bal_one = 0;
-    // let bal_two = 0;
-    // records.forEach((record) => {
-    //   const plaintextObj = JSON.parse(correctJSONString(record.plaintext));
-
-    //   if (plaintextObj.token_id === one) {
-    //     const amountNumber = parseInt(plaintextObj.amount.replace(/u128\.private/g, ""));
-    //     bal_one += amountNumber;
-    //   }
-    //   if (plaintextObj.token_id === two) {
-    //     const amountNumber = parseInt(plaintextObj.amount.replace(/u128\.private/g, ""));
-    //     bal_two += amountNumber;
-    //   }
-    // });
-    // setbalanceOne(bal_one)
-    // setbalanceTwo(bal_two)
     setbalanceOne(tokenList[one - 1].amount);
     setbalanceTwo(tokenList[two - 1].amount);
   }
@@ -166,8 +147,9 @@ function Swap(props) {
 
   useEffect(() => {
     if (data) {
+      console.log(data)
       let amount = data.quote.match(/amount_out:(\d+u\d+)/);
-      setTokenTwoInput(amount[1].replace(/u128/g, ""));
+      setTokenTwoAmount(amount[1].replace(/u128/g, "") / decimals);
       inputs = tokenOne.record + " " + data.quote + " " + data.signature
     }
   }, [data]);
@@ -179,12 +161,12 @@ function Swap(props) {
   }
 
   function changeTokenOne(e) {
-    setTokenOneRecord(e.target.value);
+    setTokenOneAmount(e.target.value);
   }
 
   function switchTokens() {
-    setTokenOneRecord(null);
-    setTokenTwoInput(null);
+    setTokenOneAmount(null);
+    setTokenTwoAmount(null);
     const one = tokenOne;
     const two = tokenTwo;
     setTokenOne(two);
@@ -198,8 +180,8 @@ function Swap(props) {
   }
 
   function modifyToken(i) {
-    setTokenOneRecord(null);
-    setTokenTwoInput(null);
+    setTokenOneAmount(null);
+    setTokenTwoAmount(null);
     if (changeToken === 1) {
       setTokenOne(tokenList[i]);
       fetchBalance(tokenList[i].token_id, tokenTwo.token_id)
@@ -215,7 +197,6 @@ function Swap(props) {
 
   async function fetchDexSwap() {
     console.log("Inputs Value:")
-
     console.log(tokenList[0].record + " " + tokenList[1].token_id.replace('u64.private', '') + "u64 " + slippage + "u128")
     execute();
   }
@@ -230,7 +211,6 @@ function Swap(props) {
           throw new Error('Network response error');
         }
         return response.json();
-        console.log(response.json())
       })
       .then((data) => {
         setData(data);
@@ -296,11 +276,13 @@ function Swap(props) {
         <div className="inputs">
           <input className="inputBox"
             placeholder="0"
-            value={tokenOneRecord || ''} onChange={changeTokenOne}  // Step 2: Attach event handler
+            type="number"
+            value={tokenOneAmount || ''} onChange={changeTokenOne}  // Step 2: Attach event handler
 
           />
           <input className="inputBox" placeholder="0"
-            value={tokenTwoInput} disabled={true} />
+            type="number"
+            value={tokenTwoAmount} disabled={true} />
           <div className="switchButton" onClick={switchTokens}>
             <img src={Switch} alt="logo" className="switchArrow" />
           </div>
@@ -328,7 +310,7 @@ function Swap(props) {
       <div className="m-t-20 ext">
         {!loading && error && <p>error executing program: {error}</p>}
         {transactionId && !loading && !error && <p>Transaction Id:<br />
-          <a className="tx_link" href={`https://explorer.hamp.app/transaction?id=${transactionId}`}>
+          <a className="tx_link" href={`https://explorer.hamp.app/transaction?id=${transactionId}`} target="_blank" rel="noopener noreferrer">
             {transactionId}
           </a>
         </p>}

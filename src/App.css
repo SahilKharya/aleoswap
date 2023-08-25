@@ -2,6 +2,19 @@
   text-align: center;
 }
 
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  /* display: none; <- Crashes Chrome on hover */
+  -webkit-appearance: none;
+  margin: 0;
+  /* <-- Apparently some margin are still there even though it's hidden */
+}
+
+input[type=number] {
+  -moz-appearance: textfield;
+  /* Firefox */
+}
+
 header {
   height: 135px;
   display: flex;
@@ -142,7 +155,7 @@ header {
     linear-gradient(0deg, rgba(213, 239, 112, 0.5), rgba(213, 239, 112, 0.5));
 
   border: 1px solid #D5EF7080;
-  min-height: 300px;
+  min-height: 250px;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;

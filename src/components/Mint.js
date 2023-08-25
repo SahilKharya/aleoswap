@@ -19,6 +19,8 @@ function Mint() {
     const [tokenList, setTokenList] = useState(list_tokens);
     const [tokenOne, setTokenOne] = useState(tokenList[0]);
     const [balanceOne, setbalanceOne] = useState(null);
+    const decimals = Math.pow(10, 6)
+
     const {
         execute,
         loading,
@@ -33,12 +35,12 @@ function Mint() {
         functionName: 'mint_private',
         // Aleo program inputs need their types specified, our program takes in 32 bit integers
         // so the inputs should look like "2i32 3i32"
-        inputs: address + " " + tokenId + "u64 " + supply + "u128",
+        inputs: address + " " + tokenId + "u64 " + (supply * decimals) + "u128",
     });
     const handleMint = (event) => {
         event.preventDefault();
         console.log("Work")
-        console.log(address + " " + tokenId + "u64 " + supply + "u128")
+        console.log(address + " " + tokenId + "u64 " + (supply * decimals) + "u128")
         execute();
     }
     // r0 -> address
@@ -61,7 +63,7 @@ function Mint() {
     const { records } = useRecords(
         {
             program_id: 'rfq_v000003.aleo', // any deployed aleo program id
-            type: 'all', // one of 'all' | 'spent' | 'unspent'
+            type: 'unspent', // one of 'all' | 'spent' | 'unspent'
         } // optional params
     );
     useEffect(() => {
@@ -105,23 +107,22 @@ function Mint() {
                 let amountVal = parseInt(r.amount.replace(/u128\.private/g, ""));
                 return sum + amountVal;
             }, 0);
-            console.log(recordGroup[0])
             let id = recordGroup[0].token_id.replace(/u64\.private/g, "");
             let rec = correctJSONString(JSON.stringify(recordGroup[0]))
                 .replace(/"([^"]+)":/g, '$1:')
                 .replace(/\n/g, '')
                 .replace(/ /g, '').replace(/"/g, '')
             if (id === '1') {
-                tokenList[0].amount = totalAmount;
+                tokenList[0].amount = totalAmount / decimals;
                 tokenList[0].record = rec;
             } else if (id === '2') {
-                tokenList[1].amount = totalAmount;
+                tokenList[1].amount = totalAmount / decimals;
                 tokenList[1].record = rec;
             } else if (id === '3') {
-                tokenList[2].amount = totalAmount;
+                tokenList[2].amount = totalAmount / decimals;
                 tokenList[2].record = rec;
             } else if (id === '4') {
-                tokenList[3].amount = totalAmount;
+                tokenList[3].amount = totalAmount / decimals;
                 tokenList[3].record = rec;
             }
             return {
@@ -130,27 +131,11 @@ function Mint() {
         });
 
         setTokenList(tokenList);
-        console.log(updatedTokenList)
-
-        console.log(tokenList)
         fetchBalance(tokenList[0]?.token_id);
     }
     async function fetchBalance(one) {
         setAddress(account.address);
-        console.log(address)
-        // let bal_one = 0;
-        // records.forEach((record) => {
-        //     const plaintextObj = JSON.parse(correctJSONString(record.plaintext));
-        //     if (plaintextObj.token_id.replace(/u64\.private/g, "") === one) {
-        //         const amountNumber = parseInt(plaintextObj.amount.replace(/u128\.private/g, ""));
-        //         bal_one += amountNumber;
-        //     }
-        // });
-
         setbalanceOne(tokenList[one - 1].amount);
-        console.log(supply)
-        console.log(tokenId)
-        console.log(tokenOne)
     }
     return (
         <>
@@ -186,6 +171,7 @@ function Mint() {
                     <input className="inputBox"
                         placeholder="0"
                         value={supply}
+                        type="number"
                         onChange={e => setSupply(e.target.value)}
                     />
                     <div className="asset assetOne" onClick={() => openModal(1)}>
@@ -201,10 +187,10 @@ function Mint() {
                 {loading && <div className="swapButton disable_btn">Minting in Progress</div>}
 
             </div>
-            <div>
+            <div className="m-t-20 ext">
                 {!loading && error && <p>error executing program: {error}</p>}
                 {transactionId && !loading && !error && <p>Transaction Id:<br />
-                    <a className="tx_link" href={`https://explorer.hamp.app/transaction?id=${transactionId}`}>
+                    <a className="tx_link" href={`https://explorer.hamp.app/transaction?id=${transactionId}`} target="_blank" rel="noopener noreferrer">
                         {transactionId}
                     </a>
                 </p>}
