@@ -359,22 +359,68 @@ header {
   width: 40px;
 }
 
+.modalSearch {
+  height: 48px;
+  background: #14171A;
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 19px;
+  display: flex;
+  color: #4B4D54;
+  padding-left: 40px;
+  width: 90%;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 30px;
+  border: 0px;
+}
+
+.searchContainer {
+  position: relative;
+  width: 100%;
+  margin-bottom: 10px;
+  /* Optional: for spacing between search and tokens */
+}
+
+.searchIcon {
+  position: absolute;
+  left: 10px;
+  top: 31%;
+  transform: translateY(-50%);
+  cursor: pointer;
+
+  width: 24px;
+  height: 24px;
+  flex: none;
+  order: 1;
+  flex-grow: 0;
+  color: #4B4D54;
+
+}
+
+
 .modalContent {
   border-top: 1px solid #363e54;
-  /* padding-top: 20px; */
+  padding: 5%;
   margin-top: 20px;
   display: flex;
-  flex-direction: column;
-  gap: 10px
+  flex-wrap: wrap;
 }
 
 .tokenChoice {
-  display: flex;
-  justify-content: flex-start;
   align-items: center;
-  padding-left: 20px;
-  padding-top: 10px;
-  padding-bottom: 10px;
+  border: 1px solid hsla(0, 0%, 100%, .1);
+  cursor: pointer;
+  display: flex;
+  margin-bottom: 16px;
+  margin-right: 16px;
+  padding: 8px 16px 8px 10px;
+  border-radius: 2px;
+  height: 40px;
+  gap: 8px;
+  background: linear-gradient(0deg, #152557, #152557),
+    linear-gradient(0deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.1));
+
 }
 
 .tokenChoice:hover {
@@ -382,17 +428,16 @@ header {
   background-color: #1f2639;
 }
 
-.tokenName {
-  margin-left: 10px;
-  font-size: 16px;
+.tokenTicker {
   font-weight: 500;
+  font-size: 16px;
+  line-height: 19px;
+  color: white;
 }
 
-.tokenTicker {
-  margin-left: 10px;
-  font-size: 13px;
-  font-weight: 300;
-  color: #51596f;
+.tokenTickerLogo {
+  width: 24px;
+  height: 24px;
 }
 
 .m_v_24 {

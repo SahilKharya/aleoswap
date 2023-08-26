@@ -9,6 +9,8 @@ import list_tokens from "../tokenList.json";
 import {
     DownOutlined
 } from "@ant-design/icons";
+import { FiSearch } from 'react-icons/fi';
+
 function Mint() {
     const [address, setAddress] = useState(null);
     const [tokenId, setTokenId] = useState(1);
@@ -20,6 +22,11 @@ function Mint() {
     const [tokenOne, setTokenOne] = useState(tokenList[0]);
     const [balanceOne, setbalanceOne] = useState(null);
     const decimals = Math.pow(10, 6)
+    const [searchInput, setSearchInput] = useState("");
+
+    const filteredTokens = tokenList?.filter(e =>
+        e.ticker.toLowerCase().includes(searchInput.toLowerCase())
+    );
 
     const {
         execute,
@@ -143,19 +150,30 @@ function Mint() {
                 open={isOpen}
                 footer={null}
                 onCancel={() => setIsOpen(false)}
-                title="Select a token"
+                title="Choose token"
             >
                 <div className="modalContent">
-                    {tokenList?.map((e, i) => {
+                    <div className="searchContainer">
+
+                        <FiSearch className="searchIcon" />
+                        <input
+                            type="text"
+                            placeholder="Search"
+                            value={searchInput}
+                            onChange={e => setSearchInput(e.target.value)}
+                            className="modalSearch" // Optional: for styling the search box
+                        />
+                    </div>
+                    {filteredTokens.map((e, i) => {
                         return (
                             <div
                                 className="tokenChoice"
                                 key={i}
                                 onClick={() => modifyToken(i)}
                             >
-                                <img src={e.img} alt={e.ticker} className="tokenLogo" />
-                                <div className="tokenChoiceNames">
-                                    <div className="tokenName">{e.name}</div>
+                                <img src={e.img} alt={e.ticker} className="tokenTickerLogo" />
+                                <div className="tokenNameDiv">
+                                    {/* <div className="tokenName">{e.name}</div> */}
                                     <div className="tokenTicker">{e.ticker}</div>
                                 </div>
                             </div>

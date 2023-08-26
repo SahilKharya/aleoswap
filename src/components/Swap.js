@@ -7,6 +7,7 @@ import {
 import list_tokens from "../tokenList.json";
 import Switch from '../asset/Swap_Button.png';
 import { useRecords, useExecuteProgram } from '@puzzlehq/sdk';
+import { FiSearch } from 'react-icons/fi';
 
 function Swap(props) {
   // const list_tokens = [
@@ -26,6 +27,11 @@ function Swap(props) {
   const [tokenList, setTokenList] = useState(list_tokens);
   const [tokenOne, setTokenOne] = useState(tokenList[0]);
   const [tokenTwo, setTokenTwo] = useState(tokenList[1]);
+  const [searchInput, setSearchInput] = useState("");
+
+  const filteredTokens = tokenList?.filter(e =>
+    e.ticker.toLowerCase().includes(searchInput.toLowerCase())
+  );
 
   function correctJSONString(str) {
     // Wrap keys with double quotes
@@ -244,7 +250,18 @@ function Swap(props) {
         title="Select a token"
       >
         <div className="modalContent">
-          {tokenList?.map((e, i) => {
+          <div className="searchContainer">
+
+            <FiSearch className="searchIcon" />
+            <input
+              type="text"
+              placeholder="Search"
+              value={searchInput}
+              onChange={e => setSearchInput(e.target.value)}
+              className="modalSearch" // Optional: for styling the search box
+            />
+          </div>
+          {filteredTokens.map((e, i) => {
             return (
               <div
                 className="tokenChoice"
@@ -253,7 +270,7 @@ function Swap(props) {
               >
                 <img src={e.img} alt={e.ticker} className="tokenLogo" />
                 <div className="tokenChoiceNames">
-                  <div className="tokenName">{e.name}</div>
+                  {/* <div className="tokenName">{e.name}</div> */}
                   <div className="tokenTicker">{e.ticker}</div>
                 </div>
               </div>
