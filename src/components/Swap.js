@@ -16,18 +16,19 @@ function Swap(props) {
   const { address, isConnected } = props;
   const [messageApi, contextHolder] = message.useMessage();
   const [slippage, setSlippage] = useState(2);
-  const [tokenOneAmount, setTokenOneAmount] = useState(null);
-  const [tokenTwoAmount, setTokenTwoAmount] = useState(null);
+  const [tokenOneAmount, setTokenOneAmount] = useState(0);
+  const [tokenTwoAmount, setTokenTwoAmount] = useState(0);
   const decimals = Math.pow(10, 6)
   const [isOpen, setIsOpen] = useState(false);
   const [changeToken, setChangeToken] = useState(1);
-  const [balanceOne, setbalanceOne] = useState(null);
-  const [balanceTwo, setbalanceTwo] = useState(null);
+  const [balanceOne, setbalanceOne] = useState(0);
+  const [balanceTwo, setbalanceTwo] = useState(0);
   // const [tokenList, setTokenList] = useState([]);
   const [tokenList, setTokenList] = useState(list_tokens);
   const [tokenOne, setTokenOne] = useState(tokenList[0]);
   const [tokenTwo, setTokenTwo] = useState(tokenList[1]);
   const [searchInput, setSearchInput] = useState("");
+  let no_record = true;
 
   const filteredTokens = tokenList?.filter(e =>
     e.ticker.toLowerCase().includes(searchInput.toLowerCase())
@@ -64,10 +65,23 @@ function Swap(props) {
   //     assert_eq r3 true;
 
   let inputs = '';
+  let input_record = '';
   if (data) {
-
-    inputs = tokenOne.record + " " + data.quote + " " + data.signature
-    // console.log(inputs)
+    input_record = tokenOne.records.find(record => {
+      const amount = parseInt(record.amount.replace('u128.private', ''));
+      return amount >= tokenOneAmount * decimals;
+    });
+    if (input_record) {
+      input_record = correctJSONString(JSON.stringify(input_record))
+        .replace(/"([^"]+)":/g, '$1:')
+        .replace(/\n/g, '')
+        .replace(/ /g, '').replace(/"/g, '')
+      no_record = false
+    } else {
+      input_record = ''
+      no_record = true
+    }
+    inputs = input_record + " " + data.quote + " " + data.signature
     // inputs = "{owner:aleo1wxulzwkmyp45j73kz22lzys8xfc7g26fa90tydc0ctm34s4yqc8svsawj7.private,amount:51u128.private,token_id:234u64.private,_nonce:3190987288161617818003687883709403124823136738918543355387177333557526155508group.public} 36u64 2u128"
   }
 
@@ -119,26 +133,25 @@ function Swap(props) {
         return sum + amountVal;
       }, 0);
       let id = recordGroup[0].token_id.replace(/u64\.private/g, "");
-      let rec = correctJSONString(JSON.stringify(recordGroup[0]))
-        .replace(/"([^"]+)":/g, '$1:')
-        .replace(/\n/g, '')
-        .replace(/ /g, '').replace(/"/g, '')
+      // let rec = correctJSONString(JSON.stringify(recordGroup[0]))
+      //   .replace(/"([^"]+)":/g, '$1:')
+      //   .replace(/\n/g, '')
+      //   .replace(/ /g, '').replace(/"/g, '')
       if (id === '1') {
         tokenList[0].amount = totalAmount / decimals;
-        tokenList[0].record = rec;
+        tokenList[0].records = recordGroup;
       } else if (id === '2') {
         tokenList[1].amount = totalAmount / decimals;
-        tokenList[1].record = rec;
+        tokenList[1].records = recordGroup;
       } else if (id === '3') {
         tokenList[2].amount = totalAmount / decimals;
-        tokenList[2].record = rec;
+        tokenList[2].records = recordGroup;
       } else if (id === '4') {
         tokenList[3].amount = totalAmount / decimals;
-        tokenList[3].record = rec;
+        tokenList[3].records = recordGroup;
       }
-      return {
-        tokenList
-      };
+      console.log(tokenList)
+      return tokenList;
     });
 
     setTokenList(tokenList);
@@ -156,7 +169,22 @@ function Swap(props) {
       console.log(data)
       let amount = data.quote.match(/amount_out:(\d+u\d+)/);
       setTokenTwoAmount(amount[1].replace(/u128/g, "") / decimals);
-      inputs = tokenOne.record + " " + data.quote + " " + data.signature
+      let inputRecord = '';
+      inputRecord = tokenOne.records.find(record => {
+        const amount = parseInt(record.amount.replace('u128.private', ''));
+        return amount >= tokenOneAmount * decimals;
+      });
+      if (inputRecord) {
+        inputRecord = correctJSONString(JSON.stringify(inputRecord))
+          .replace(/"([^"]+)":/g, '$1:')
+          .replace(/\n/g, '')
+          .replace(/ /g, '').replace(/"/g, '')
+        no_record = false;
+      } else {
+        inputRecord = ''
+        no_record = true
+      }
+      inputs = inputRecord + " " + data.quote + " " + data.signature;
     }
   }, [data]);
 
@@ -171,8 +199,8 @@ function Swap(props) {
   }
 
   function switchTokens() {
-    setTokenOneAmount(null);
-    setTokenTwoAmount(null);
+    setTokenOneAmount(0);
+    setTokenTwoAmount(0);
     const one = tokenOne;
     const two = tokenTwo;
     setTokenOne(two);
@@ -186,8 +214,8 @@ function Swap(props) {
   }
 
   function modifyToken(i) {
-    setTokenOneAmount(null);
-    setTokenTwoAmount(null);
+    setTokenOneAmount(0);
+    setTokenTwoAmount(0);
     if (changeToken === 1) {
       setTokenOne(tokenList[i]);
       fetchBalance(tokenList[i].token_id, tokenTwo.token_id)
@@ -203,7 +231,7 @@ function Swap(props) {
 
   async function fetchDexSwap() {
     console.log("Inputs Value:")
-    console.log(tokenList[0].record + " " + tokenList[1].token_id.replace('u64.private', '') + "u64 " + slippage + "u128")
+    console.log(input_record + " " + data.quote + " " + data.signature)
     execute();
   }
 
@@ -326,6 +354,7 @@ function Swap(props) {
       </div>
       <div className="m-t-20 ext">
         {!loading && error && <p>error executing program: {error}</p>}
+        {!loading && error && no_record && <p>Low Balance, please try with a smaller amount</p>}
         {transactionId && !loading && !error && <p>Transaction Id:<br />
           <a className="tx_link" href={`https://explorer.hamp.app/transaction?id=${transactionId}`} target="_blank" rel="noopener noreferrer">
             {transactionId}

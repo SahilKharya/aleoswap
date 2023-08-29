@@ -14,7 +14,7 @@ import { FiSearch } from 'react-icons/fi';
 function Mint() {
     const [address, setAddress] = useState(null);
     const [tokenId, setTokenId] = useState(1);
-    const [supply, setSupply] = useState(null);
+    const [supply, setSupply] = useState(0);
     const { account, accounts, isConnected } = useAccount();
     const [isOpen, setIsOpen] = useState(false);
     const [changeToken, setChangeToken] = useState(1);
@@ -92,7 +92,7 @@ function Mint() {
         setIsOpen(true);
     }
     function modifyToken(i) {
-        setSupply(null);
+        setSupply(0);
         setTokenOne(tokenList[i]);
         fetchBalance(tokenList[i].token_id)
         setIsOpen(false);

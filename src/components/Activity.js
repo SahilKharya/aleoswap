@@ -5,7 +5,7 @@ function Activity() {
     const { records, error, loading } = useRecords(
         {
             program_id: 'rfq_v000003.aleo', // any deployed aleo program id
-            type: 'all', // one of 'all' | 'spent' | 'unspent'
+            type: 'unspent', // one of 'all' | 'spent' | 'unspent'
         } // optional params
     );
     console.log(records);
