@@ -2,12 +2,13 @@ import React from 'react'
 import { useRecords } from '@puzzlehq/sdk';
 
 function Activity() {
-    const { records, error, loading } = useRecords(
-        {
-            program_id: 'rfq_v000003.aleo', // any deployed aleo program id
-            type: 'unspent', // one of 'all' | 'spent' | 'unspent'
-        } // optional params
-    );
+    const { request, records, error, loading } = useRecords({
+        filter: {
+            program_id: 'rfq_v000003.aleo',
+            type: 'unspent',
+        },
+        formatted: true
+    });
     console.log(records);
     return (
         <>

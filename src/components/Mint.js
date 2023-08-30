@@ -59,20 +59,18 @@ function Mint() {
     // cast r0 r2 r1 into r3 as Token.record;
     // output r3 as Token.record;
     // finalize r1;
-    function correctJSONString(str) {
-        // Wrap keys with double quotes
-        str = str.replace(/(\w+):/g, "\"$1\":");
-        // Wrap non-standard values with double quotes
-        str = str.replace(/: ([a-z0-9_.]+)(,|\n|})/gi, ": \"$1\"$2");
-        return str;
-    }
 
-    const { records } = useRecords(
-        {
-            program_id: 'rfq_v000003.aleo', // any deployed aleo program id
-            type: 'unspent', // one of 'all' | 'spent' | 'unspent'
-        } // optional params
-    );
+    const { request, records } = useRecords({
+        filter: {
+            program_id: 'rfq_v000003.aleo',
+            type: 'unspent',
+        },
+    });
+
+    useEffect(() => {
+        request()
+    }, [])
+
     useEffect(() => {
         setTokenId(tokenOne.token_id)
     }, [tokenOne]);
@@ -80,7 +78,11 @@ function Mint() {
         console.log(tokenId); // Logs the updated value after the component re-renders
     }, [tokenId]);
     useEffect(() => {
-        fetchTokensList();
+        if (records) {
+            fetchTokensList();
+            console.log(request)
+            console.log(records)
+        }
     }, [records]);
     useEffect(() => {
     }, [tokenList]);
@@ -99,38 +101,34 @@ function Mint() {
     }
     async function fetchTokensList() {
         const groupedByTokenId = records.reduce((acc, record) => {
-            const parsedPlaintext = JSON.parse(correctJSONString(record.plaintext));
-            const tokenId = parsedPlaintext.token_id;
-
+            const plaintext = record.plaintext
+            const tokenMatch = plaintext.match(/token_id:([\d\w]+)\u64.private/);
+            const tokenId = tokenMatch[1]
             if (!acc[tokenId]) {
                 acc[tokenId] = [];
             }
-            acc[tokenId].push(parsedPlaintext);
+            acc[tokenId].push(plaintext);
             return acc;
         }, {});
 
         const updatedTokenList = Object.values(groupedByTokenId).map((recordGroup) => {
             const totalAmount = recordGroup.reduce((sum, r) => {
-                let amountVal = parseInt(r.amount.replace(/u128\.private/g, ""));
+                let amountVal = parseInt(r.match(/amount:([\d\w]+)\u128.private/)[1]);
                 return sum + amountVal;
             }, 0);
-            let id = recordGroup[0].token_id.replace(/u64\.private/g, "");
-            let rec = correctJSONString(JSON.stringify(recordGroup[0]))
-                .replace(/"([^"]+)":/g, '$1:')
-                .replace(/\n/g, '')
-                .replace(/ /g, '').replace(/"/g, '')
+            let id = recordGroup[0].match(/token_id:([\d\w]+)\u64.private/)[1];
             if (id === '1') {
                 tokenList[0].amount = totalAmount / decimals;
-                tokenList[0].record = rec;
+                tokenList[0].records = recordGroup;
             } else if (id === '2') {
                 tokenList[1].amount = totalAmount / decimals;
-                tokenList[1].record = rec;
+                tokenList[1].records = recordGroup;
             } else if (id === '3') {
                 tokenList[2].amount = totalAmount / decimals;
-                tokenList[2].record = rec;
+                tokenList[2].records = recordGroup;
             } else if (id === '4') {
                 tokenList[3].amount = totalAmount / decimals;
-                tokenList[3].record = rec;
+                tokenList[3].records = recordGroup;
             }
             return {
                 tokenList

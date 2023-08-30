@@ -42,13 +42,16 @@ function Swap(props) {
     return str;
   }
 
-  const { records } = useRecords(
-    {
-      program_id: 'rfq_v000003.aleo', // any deployed aleo program id
-      type: 'unspent', // one of 'all' | 'spent' | 'unspent'
-    } // optional params
-  );
+  const { request, records } = useRecords({
+    filter: {
+      program_id: 'rfq_v000003.aleo',
+      type: 'unspent',
+    },
+  });
 
+  useEffect(() => {
+    request()
+  }, [])
   //   function swap_exact_in:
   //     input r0 as Token.record;
   //     input r1 as u64.private;
@@ -68,14 +71,10 @@ function Swap(props) {
   let input_record = '';
   if (data) {
     input_record = tokenOne.records.find(record => {
-      const amount = parseInt(record.amount.replace('u128.private', ''));
+      const amount = parseInt(record.match(/amount:([\d\w]+)\u128.private/)[1]);
       return amount >= tokenOneAmount * decimals;
     });
     if (input_record) {
-      input_record = correctJSONString(JSON.stringify(input_record))
-        .replace(/"([^"]+)":/g, '$1:')
-        .replace(/\n/g, '')
-        .replace(/ /g, '').replace(/"/g, '')
       no_record = false
     } else {
       input_record = ''
@@ -101,7 +100,9 @@ function Swap(props) {
   });
 
   useEffect(() => {
-    fetchTokensList();
+    if (records) {
+      fetchTokensList();
+    }
   }, [records]);
   useEffect(() => {
     if (tokenList && tokenList.length > 1) {
@@ -117,26 +118,22 @@ function Swap(props) {
 
   async function fetchTokensList() {
     const groupedByTokenId = records.reduce((acc, record) => {
-      const parsedPlaintext = JSON.parse(correctJSONString(record.plaintext));
-      const tokenId = parsedPlaintext.token_id;
-
+      const plaintext = record.plaintext
+      const tokenMatch = plaintext.match(/token_id:([\d\w]+)\u64.private/);
+      const tokenId = tokenMatch[1]
       if (!acc[tokenId]) {
         acc[tokenId] = [];
       }
-      acc[tokenId].push(parsedPlaintext);
+      acc[tokenId].push(plaintext);
       return acc;
     }, {});
 
     const updatedTokenList = Object.values(groupedByTokenId).map((recordGroup) => {
       const totalAmount = recordGroup.reduce((sum, r) => {
-        let amountVal = parseInt(r.amount.replace(/u128\.private/g, ""));
+        let amountVal = parseInt(r.match(/amount:([\d\w]+)\u128.private/)[1]);
         return sum + amountVal;
       }, 0);
-      let id = recordGroup[0].token_id.replace(/u64\.private/g, "");
-      // let rec = correctJSONString(JSON.stringify(recordGroup[0]))
-      //   .replace(/"([^"]+)":/g, '$1:')
-      //   .replace(/\n/g, '')
-      //   .replace(/ /g, '').replace(/"/g, '')
+      let id = recordGroup[0].match(/token_id:([\d\w]+)\u64.private/)[1];
       if (id === '1') {
         tokenList[0].amount = totalAmount / decimals;
         tokenList[0].records = recordGroup;
@@ -171,14 +168,10 @@ function Swap(props) {
       setTokenTwoAmount(amount[1].replace(/u128/g, "") / decimals);
       let inputRecord = '';
       inputRecord = tokenOne.records.find(record => {
-        const amount = parseInt(record.amount.replace('u128.private', ''));
+        const amount = parseInt(record.match(/amount:([\d\w]+)\u128.private/)[1]);
         return amount >= tokenOneAmount * decimals;
       });
       if (inputRecord) {
-        inputRecord = correctJSONString(JSON.stringify(inputRecord))
-          .replace(/"([^"]+)":/g, '$1:')
-          .replace(/\n/g, '')
-          .replace(/ /g, '').replace(/"/g, '')
         no_record = false;
       } else {
         inputRecord = ''
